@@ -17,6 +17,7 @@ use MageOS\Blog\Api\Data\TagInterface;
 use MageOS\Blog\Api\Data\TagInterfaceFactory;
 use MageOS\Blog\Api\TagRepositoryInterface;
 use MageOS\Blog\Api\UrlKeyGeneratorInterface;
+use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class Save extends Action implements HttpPostActionInterface
 {
@@ -26,7 +27,7 @@ class Save extends Action implements HttpPostActionInterface
         Context $context,
         private readonly TagRepositoryInterface $repository,
         private readonly TagInterfaceFactory $tagFactory,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator
+        private readonly UrlKeyResolver $urlKeyResolver
     ) {
         parent::__construct($context);
     }
@@ -78,8 +79,10 @@ class Save extends Action implements HttpPostActionInterface
      */
     private function hydrate(TagInterface $tag, array $data): void
     {
+        // url_key is deliberately absent: this loop maps '' to setUrlKey(null), which is a TypeError
+        // against the non-nullable setter. It is resolved separately below.
         $scalarFields = [
-            'title', 'url_key', 'description',
+            'title', 'description',
             'meta_title', 'meta_description',
         ];
         foreach ($scalarFields as $field) {
@@ -94,12 +97,12 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        if (isset($data['title']) && (!isset($data['url_key']) || $data['url_key'] === '')) {
-            $tag->setUrlKey($this->urlKeyGenerator->generate(
-                (string) $data['title'],
-                UrlKeyGeneratorInterface::ENTITY_TAG
-            ));
-        }
+        $tag->setUrlKey($this->urlKeyResolver->resolve(
+            \array_key_exists('url_key', $data) ? (string) $data['url_key'] : null,
+            \array_key_exists('title', $data) ? (string) $data['title'] : null,
+            UrlKeyGeneratorInterface::ENTITY_TAG,
+            $tag->getUrlKey()
+        ));
 
         if (\array_key_exists('is_active', $data)) {
             $tag->setIsActive((bool) $data['is_active']);

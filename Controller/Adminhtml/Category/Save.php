@@ -17,6 +17,7 @@ use MageOS\Blog\Api\CategoryRepositoryInterface;
 use MageOS\Blog\Api\Data\CategoryInterface;
 use MageOS\Blog\Api\Data\CategoryInterfaceFactory;
 use MageOS\Blog\Api\UrlKeyGeneratorInterface;
+use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class Save extends Action implements HttpPostActionInterface
 {
@@ -26,7 +27,7 @@ class Save extends Action implements HttpPostActionInterface
         Context $context,
         private readonly CategoryRepositoryInterface $repository,
         private readonly CategoryInterfaceFactory $categoryFactory,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator
+        private readonly UrlKeyResolver $urlKeyResolver
     ) {
         parent::__construct($context);
     }
@@ -81,8 +82,10 @@ class Save extends Action implements HttpPostActionInterface
      */
     private function hydrate(CategoryInterface $category, array $data): void
     {
+        // url_key is deliberately absent: this loop maps '' to setUrlKey(null), which is a TypeError
+        // against the non-nullable setter. It is resolved separately below.
         $scalarFields = [
-            'title', 'url_key', 'description',
+            'title', 'description',
             'meta_title', 'meta_description', 'meta_keywords',
         ];
         foreach ($scalarFields as $field) {
@@ -97,12 +100,12 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        if (isset($data['title']) && (!isset($data['url_key']) || $data['url_key'] === '')) {
-            $category->setUrlKey($this->urlKeyGenerator->generate(
-                (string) $data['title'],
-                UrlKeyGeneratorInterface::ENTITY_CATEGORY
-            ));
-        }
+        $category->setUrlKey($this->urlKeyResolver->resolve(
+            \array_key_exists('url_key', $data) ? (string) $data['url_key'] : null,
+            \array_key_exists('title', $data) ? (string) $data['title'] : null,
+            UrlKeyGeneratorInterface::ENTITY_CATEGORY,
+            $category->getUrlKey()
+        ));
 
         if (\array_key_exists('parent_id', $data)) {
             $parent = $data['parent_id'];

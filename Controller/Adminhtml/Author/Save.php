@@ -18,6 +18,7 @@ use MageOS\Blog\Api\Data\AuthorInterface;
 use MageOS\Blog\Api\Data\AuthorInterfaceFactory;
 use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\ImageUploader;
+use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class Save extends Action implements HttpPostActionInterface
 {
@@ -27,7 +28,7 @@ class Save extends Action implements HttpPostActionInterface
         Context $context,
         private readonly AuthorRepositoryInterface $repository,
         private readonly AuthorInterfaceFactory $authorFactory,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator,
+        private readonly UrlKeyResolver $urlKeyResolver,
         private readonly ImageUploader $imageUploader
     ) {
         parent::__construct($context);
@@ -80,8 +81,10 @@ class Save extends Action implements HttpPostActionInterface
      */
     private function hydrate(AuthorInterface $author, array $data): void
     {
+        // slug is deliberately absent: this loop maps '' to setSlug(null), which is a TypeError
+        // against the non-nullable setter. It is resolved separately below.
         $scalarFields = [
-            'name', 'slug', 'bio', 'email',
+            'name', 'bio', 'email',
             'twitter', 'linkedin', 'website',
         ];
         foreach ($scalarFields as $field) {
@@ -96,12 +99,12 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        if (isset($data['name']) && (!isset($data['slug']) || $data['slug'] === '')) {
-            $author->setSlug($this->urlKeyGenerator->generate(
-                (string) $data['name'],
-                UrlKeyGeneratorInterface::ENTITY_AUTHOR
-            ));
-        }
+        $author->setSlug($this->urlKeyResolver->resolve(
+            \array_key_exists('slug', $data) ? (string) $data['slug'] : null,
+            \array_key_exists('name', $data) ? (string) $data['name'] : null,
+            UrlKeyGeneratorInterface::ENTITY_AUTHOR,
+            $author->getSlug()
+        ));
 
         if (\array_key_exists('is_active', $data)) {
             $author->setIsActive((bool) $data['is_active']);

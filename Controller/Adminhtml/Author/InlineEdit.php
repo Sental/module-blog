@@ -12,7 +12,9 @@ use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use MageOS\Blog\Api\AuthorRepositoryInterface;
+use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\Author;
+use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class InlineEdit extends Action implements HttpPostActionInterface
 {
@@ -20,7 +22,8 @@ class InlineEdit extends Action implements HttpPostActionInterface
 
     public function __construct(
         Context $context,
-        private readonly AuthorRepositoryInterface $repository
+        private readonly AuthorRepositoryInterface $repository,
+        private readonly UrlKeyResolver $urlKeyResolver
     ) {
         parent::__construct($context);
     }
@@ -52,10 +55,24 @@ class InlineEdit extends Action implements HttpPostActionInterface
         foreach ($items as $authorId => $changes) {
             try {
                 $author = $this->repository->getById((int) $authorId);
+                $changes = (array) $changes;
                 if ($author instanceof Author) {
-                    foreach ((array) $changes as $key => $value) {
+                    foreach ($changes as $key => $value) {
+                        if ($key === 'slug') {
+                            continue;
+                        }
                         $author->setData((string) $key, $value);
                     }
+                }
+                // Blanking the slug cell keeps the current slug rather than storing '', and
+                // an edited name never rewrites the slug behind the editor's back.
+                if (\array_key_exists('slug', $changes)) {
+                    $author->setSlug($this->urlKeyResolver->resolve(
+                        (string) $changes['slug'],
+                        $author->getName(),
+                        UrlKeyGeneratorInterface::ENTITY_AUTHOR,
+                        $author->getSlug()
+                    ));
                 }
                 $this->repository->save($author);
             } catch (\Throwable $e) {

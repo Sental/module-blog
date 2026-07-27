@@ -10,9 +10,11 @@ use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use MageOS\Blog\Api\AuthorRepositoryInterface;
+use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\AuthorFactory;
 use MageOS\Blog\Model\Resolver\AdminAuthorization;
 use MageOS\Blog\Model\Resolver\Mapper\AuthorMapper;
+use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class CreateResolver implements ResolverInterface
 {
@@ -21,6 +23,7 @@ class CreateResolver implements ResolverInterface
         private readonly AuthorRepositoryInterface $authorRepository,
         private readonly AuthorMapper $authorMapper,
         private readonly AdminAuthorization $adminAuthorization,
+        private readonly UrlKeyResolver $urlKeyResolver,
     ) {
     }
 
@@ -45,9 +48,6 @@ class CreateResolver implements ResolverInterface
 
         $author = $this->authorFactory->create();
 
-        if (\array_key_exists('slug', $input)) {
-            $author->setSlug((string) $input['slug']);
-        }
         if (\array_key_exists('name', $input)) {
             $author->setName((string) $input['name']);
         }
@@ -74,6 +74,12 @@ class CreateResolver implements ResolverInterface
         }
 
         try {
+            // slug is optional in the schema; fall back to one generated from the name.
+            $author->setSlug($this->urlKeyResolver->resolve(
+                isset($input['slug']) ? (string) $input['slug'] : null,
+                isset($input['name']) ? (string) $input['name'] : null,
+                UrlKeyGeneratorInterface::ENTITY_AUTHOR
+            ));
             $saved = $this->authorRepository->save($author);
         } catch (LocalizedException $e) {
             throw new GraphQlInputException(__($e->getMessage()), $e);

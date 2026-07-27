@@ -10,9 +10,11 @@ use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use MageOS\Blog\Api\TagRepositoryInterface;
+use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\Resolver\AdminAuthorization;
 use MageOS\Blog\Model\Resolver\Mapper\TagMapper;
 use MageOS\Blog\Model\TagFactory;
+use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class CreateResolver implements ResolverInterface
 {
@@ -21,6 +23,7 @@ class CreateResolver implements ResolverInterface
         private readonly TagRepositoryInterface $tagRepository,
         private readonly TagMapper $tagMapper,
         private readonly AdminAuthorization $adminAuthorization,
+        private readonly UrlKeyResolver $urlKeyResolver,
     ) {
     }
 
@@ -45,9 +48,6 @@ class CreateResolver implements ResolverInterface
 
         $tag = $this->tagFactory->create();
 
-        if (\array_key_exists('url_key', $input)) {
-            $tag->setUrlKey((string) $input['url_key']);
-        }
         if (\array_key_exists('title', $input)) {
             $tag->setTitle((string) $input['title']);
         }
@@ -68,6 +68,12 @@ class CreateResolver implements ResolverInterface
         }
 
         try {
+            // url_key is optional in the schema; fall back to a slug generated from the title.
+            $tag->setUrlKey($this->urlKeyResolver->resolve(
+                isset($input['url_key']) ? (string) $input['url_key'] : null,
+                isset($input['title']) ? (string) $input['title'] : null,
+                UrlKeyGeneratorInterface::ENTITY_TAG
+            ));
             $saved = $this->tagRepository->save($tag);
         } catch (LocalizedException $e) {
             throw new GraphQlInputException(__($e->getMessage()), $e);

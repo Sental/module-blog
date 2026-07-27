@@ -18,6 +18,7 @@ use MageOS\Blog\Api\Data\PostInterfaceFactory;
 use MageOS\Blog\Api\PostRepositoryInterface;
 use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\ImageUploader;
+use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class Save extends Action implements HttpPostActionInterface
 {
@@ -27,7 +28,7 @@ class Save extends Action implements HttpPostActionInterface
         Context $context,
         private readonly PostRepositoryInterface $repository,
         private readonly PostInterfaceFactory $postFactory,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator,
+        private readonly UrlKeyResolver $urlKeyResolver,
         private readonly ImageUploader $imageUploader
     ) {
         parent::__construct($context);
@@ -80,8 +81,10 @@ class Save extends Action implements HttpPostActionInterface
      */
     private function hydrate(PostInterface $post, array $data): void
     {
+        // url_key is deliberately absent: this loop maps '' to setUrlKey(null), which is a TypeError
+        // against the non-nullable setter. It is resolved separately below.
         $scalarFields = [
-            'title', 'url_key', 'content', 'short_content',
+            'title', 'content', 'short_content',
             'featured_image_alt', 'meta_title', 'meta_description',
             'meta_keywords', 'meta_robots', 'og_title', 'og_description',
             'og_type', 'publish_date',
@@ -98,12 +101,12 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        if (isset($data['title']) && (!isset($data['url_key']) || $data['url_key'] === '')) {
-            $post->setUrlKey($this->urlKeyGenerator->generate(
-                (string) $data['title'],
-                UrlKeyGeneratorInterface::ENTITY_POST
-            ));
-        }
+        $post->setUrlKey($this->urlKeyResolver->resolve(
+            \array_key_exists('url_key', $data) ? (string) $data['url_key'] : null,
+            \array_key_exists('title', $data) ? (string) $data['title'] : null,
+            UrlKeyGeneratorInterface::ENTITY_POST,
+            $post->getUrlKey()
+        ));
 
         if (isset($data['status'])) {
             $post->setStatus((int) $data['status']);

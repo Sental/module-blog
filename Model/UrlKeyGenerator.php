@@ -6,16 +6,19 @@ namespace MageOS\Blog\Model;
 
 use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\UrlKeyGenerator\CollisionChecker;
+use MageOS\Blog\Model\UrlKeyGenerator\SlugNormalizer;
 
 class UrlKeyGenerator implements UrlKeyGeneratorInterface
 {
-    public function __construct(private readonly CollisionChecker $checker)
-    {
+    public function __construct(
+        private readonly CollisionChecker $checker,
+        private readonly SlugNormalizer $normalizer,
+    ) {
     }
 
     public function generate(string $title, string $entityType, ?int $storeId = null): string
     {
-        $base = $this->normalize($title);
+        $base = $this->normalizer->normalize($title);
         if ($base === '' || \in_array($base, self::RESERVED, true)) {
             throw new \InvalidArgumentException("Cannot generate a URL key from '{$title}'.");
         }
@@ -38,14 +41,5 @@ class UrlKeyGenerator implements UrlKeyGeneratorInterface
         if ($this->checker->isTaken($urlKey, $entityType, $storeId, $excludingEntityId)) {
             throw new \InvalidArgumentException("URL key '{$urlKey}' is already in use.");
         }
-    }
-
-    private function normalize(string $title): string
-    {
-        $decomposed = \Normalizer::normalize($title, \Normalizer::FORM_D) ?: $title;
-        $stripped = preg_replace('/\p{M}+/u', '', $decomposed) ?? $decomposed;
-        $lower = mb_strtolower($stripped, 'UTF-8');
-        $slug = preg_replace('/[^a-z0-9]+/', '-', $lower) ?? '';
-        return trim($slug, '-');
     }
 }

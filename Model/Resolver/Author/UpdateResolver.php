@@ -12,8 +12,10 @@ use Magento\Framework\GraphQl\Exception\GraphQlNoSuchEntityException;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use MageOS\Blog\Api\AuthorRepositoryInterface;
+use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\Resolver\AdminAuthorization;
 use MageOS\Blog\Model\Resolver\Mapper\AuthorMapper;
+use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class UpdateResolver implements ResolverInterface
 {
@@ -21,6 +23,7 @@ class UpdateResolver implements ResolverInterface
         private readonly AuthorRepositoryInterface $authorRepository,
         private readonly AuthorMapper $authorMapper,
         private readonly AdminAuthorization $adminAuthorization,
+        private readonly UrlKeyResolver $urlKeyResolver,
     ) {
     }
 
@@ -52,9 +55,6 @@ class UpdateResolver implements ResolverInterface
             throw new GraphQlNoSuchEntityException(__($e->getMessage()), $e);
         }
 
-        if (\array_key_exists('slug', $input)) {
-            $author->setSlug((string) $input['slug']);
-        }
         if (\array_key_exists('name', $input)) {
             $author->setName((string) $input['name']);
         }
@@ -81,6 +81,13 @@ class UpdateResolver implements ResolverInterface
         }
 
         try {
+            // A blank or omitted slug keeps the stored one rather than moving the page.
+            $author->setSlug($this->urlKeyResolver->resolve(
+                isset($input['slug']) ? (string) $input['slug'] : null,
+                isset($input['name']) ? (string) $input['name'] : $author->getName(),
+                UrlKeyGeneratorInterface::ENTITY_AUTHOR,
+                $author->getSlug()
+            ));
             $saved = $this->authorRepository->save($author);
         } catch (LocalizedException $e) {
             throw new GraphQlInputException(__($e->getMessage()), $e);
