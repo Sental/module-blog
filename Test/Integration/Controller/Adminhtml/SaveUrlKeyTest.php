@@ -11,12 +11,7 @@ use Magento\Framework\Message\MessageInterface;
 use Magento\TestFramework\TestCase\AbstractBackendController;
 
 /**
- * Regression cover for the empty-slug TypeError.
- *
- * All four admin Save controllers hydrated scalars in a loop that mapped '' to $setter(null).
- * url_key/slug went through that loop, so submitting the field blank called setUrlKey(null) against
- * a non-nullable setter and the request died with a TypeError before the generate-from-title
- * fallback could run.
+ * Regression cover for the empty-slug TypeError (issue #16).
  *
  * @magentoAppArea adminhtml
  * @magentoDbIsolation enabled

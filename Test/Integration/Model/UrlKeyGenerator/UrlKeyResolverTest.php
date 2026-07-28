@@ -38,8 +38,7 @@ final class UrlKeyResolverTest extends TestCase
 
     public function test_normalizes_a_hand_typed_slug_without_collision_suffixing(): void
     {
-        // A submitted slug is normalized but never silently renamed. A clash must surface as a
-        // validation error from the repository, not as a different URL than the editor typed.
+        // Never silently renamed: a clash must surface as a validation error instead.
         self::assertSame(
             'integration-typed',
             $this->resolver()->resolve('Integration Typed!', 'Ignored Title', UrlKeyGeneratorInterface::ENTITY_POST)

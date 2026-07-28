@@ -12,9 +12,7 @@ use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use MageOS\Blog\Api\PostRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\Post;
-use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class InlineEdit extends Action implements HttpPostActionInterface
 {
@@ -22,8 +20,7 @@ class InlineEdit extends Action implements HttpPostActionInterface
 
     public function __construct(
         Context $context,
-        private readonly PostRepositoryInterface $repository,
-        private readonly UrlKeyResolver $urlKeyResolver
+        private readonly PostRepositoryInterface $repository
     ) {
         parent::__construct($context);
     }
@@ -55,24 +52,10 @@ class InlineEdit extends Action implements HttpPostActionInterface
         foreach ($items as $postId => $changes) {
             try {
                 $post = $this->repository->getById((int) $postId);
-                $changes = (array) $changes;
                 if ($post instanceof Post) {
-                    foreach ($changes as $key => $value) {
-                        if ($key === 'url_key') {
-                            continue;
-                        }
+                    foreach ((array) $changes as $key => $value) {
                         $post->setData((string) $key, $value);
                     }
-                }
-                // Blanking the url_key cell keeps the current slug rather than storing '', and
-                // an edited title never rewrites the slug behind the editor's back.
-                if (\array_key_exists('url_key', $changes)) {
-                    $post->setUrlKey($this->urlKeyResolver->resolve(
-                        (string) $changes['url_key'],
-                        $post->getTitle(),
-                        UrlKeyGeneratorInterface::ENTITY_POST,
-                        $post->getUrlKey()
-                    ));
                 }
                 $this->repository->save($post);
             } catch (\Throwable $e) {

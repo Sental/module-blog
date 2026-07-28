@@ -184,6 +184,7 @@
 "Unsupported post entity: %1","Unsupported post entity: %1"
 "Unsupported tag entity: %1","Unsupported tag entity: %1"
 "URL Key","URL Key"
+"URL key ""%1"" is not valid. Use letters, numbers and hyphens, or leave it empty to generate one automatically.","URL key ""%1"" is not valid. Use letters, numbers and hyphens, or leave it empty to generate one automatically."
 "X (Twitter)","X (Twitter)"
 Active,Active
 Archive,Archive

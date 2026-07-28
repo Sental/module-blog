@@ -14,7 +14,6 @@ use MageOS\Blog\Api\Data\PostInterface;
 use MageOS\Blog\Api\Data\PostSearchResultsInterface;
 use MageOS\Blog\Api\Data\PostSearchResultsInterfaceFactory;
 use MageOS\Blog\Api\PostRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\Post\Link\CategoryLinkManager;
 use MageOS\Blog\Model\Post\Link\RelatedPostLinkManager;
 use MageOS\Blog\Model\Post\Link\RelatedProductLinkManager;
@@ -36,7 +35,6 @@ class PostRepository implements PostRepositoryInterface
         private readonly TagLinkManager $tagLinks,
         private readonly RelatedPostLinkManager $relatedPostLinks,
         private readonly RelatedProductLinkManager $relatedProductLinks,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator,
     ) {
     }
 
@@ -47,18 +45,10 @@ class PostRepository implements PostRepositoryInterface
         }
 
         try {
-            $this->urlKeyGenerator->validate(
-                (string) $post->getUrlKey(),
-                UrlKeyGeneratorInterface::ENTITY_POST,
-                null,
-                $post->getPostId() !== null ? (int) $post->getPostId() : null
-            );
-        } catch (\InvalidArgumentException $e) {
-            throw new LocalizedException(__($e->getMessage()), $e);
-        }
-
-        try {
             $this->resource->save($post);
+        } catch (LocalizedException $e) {
+            // Slug errors from _beforeSave: surface verbatim, not wrapped in a save error.
+            throw $e;
         } catch (\Exception $e) {
             throw new CouldNotSaveException(__('Could not save the blog post: %1', $e->getMessage()), $e);
         }

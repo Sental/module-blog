@@ -16,8 +16,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use MageOS\Blog\Api\CategoryRepositoryInterface;
 use MageOS\Blog\Api\Data\CategoryInterface;
 use MageOS\Blog\Api\Data\CategoryInterfaceFactory;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
-use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class Save extends Action implements HttpPostActionInterface
 {
@@ -26,8 +24,7 @@ class Save extends Action implements HttpPostActionInterface
     public function __construct(
         Context $context,
         private readonly CategoryRepositoryInterface $repository,
-        private readonly CategoryInterfaceFactory $categoryFactory,
-        private readonly UrlKeyResolver $urlKeyResolver
+        private readonly CategoryInterfaceFactory $categoryFactory
     ) {
         parent::__construct($context);
     }
@@ -82,8 +79,7 @@ class Save extends Action implements HttpPostActionInterface
      */
     private function hydrate(CategoryInterface $category, array $data): void
     {
-        // url_key is deliberately absent: this loop maps '' to setUrlKey(null), which is a TypeError
-        // against the non-nullable setter. It is resolved separately below.
+        // url_key is absent on purpose: this loop maps '' to setUrlKey(null), a TypeError.
         $scalarFields = [
             'title', 'description',
             'meta_title', 'meta_description', 'meta_keywords',
@@ -100,12 +96,9 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        $category->setUrlKey($this->urlKeyResolver->resolve(
-            \array_key_exists('url_key', $data) ? (string) $data['url_key'] : null,
-            \array_key_exists('title', $data) ? (string) $data['title'] : null,
-            UrlKeyGeneratorInterface::ENTITY_CATEGORY,
-            $category->getUrlKey()
-        ));
+        if (\array_key_exists('url_key', $data)) {
+            $category->setUrlKey((string) $data['url_key']);
+        }
 
         if (\array_key_exists('parent_id', $data)) {
             $parent = $data['parent_id'];

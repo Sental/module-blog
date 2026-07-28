@@ -16,9 +16,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use MageOS\Blog\Api\Data\PostInterface;
 use MageOS\Blog\Api\Data\PostInterfaceFactory;
 use MageOS\Blog\Api\PostRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\ImageUploader;
-use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class Save extends Action implements HttpPostActionInterface
 {
@@ -28,7 +26,6 @@ class Save extends Action implements HttpPostActionInterface
         Context $context,
         private readonly PostRepositoryInterface $repository,
         private readonly PostInterfaceFactory $postFactory,
-        private readonly UrlKeyResolver $urlKeyResolver,
         private readonly ImageUploader $imageUploader
     ) {
         parent::__construct($context);
@@ -81,8 +78,7 @@ class Save extends Action implements HttpPostActionInterface
      */
     private function hydrate(PostInterface $post, array $data): void
     {
-        // url_key is deliberately absent: this loop maps '' to setUrlKey(null), which is a TypeError
-        // against the non-nullable setter. It is resolved separately below.
+        // url_key is absent on purpose: this loop maps '' to setUrlKey(null), a TypeError.
         $scalarFields = [
             'title', 'content', 'short_content',
             'featured_image_alt', 'meta_title', 'meta_description',
@@ -101,12 +97,9 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        $post->setUrlKey($this->urlKeyResolver->resolve(
-            \array_key_exists('url_key', $data) ? (string) $data['url_key'] : null,
-            \array_key_exists('title', $data) ? (string) $data['title'] : null,
-            UrlKeyGeneratorInterface::ENTITY_POST,
-            $post->getUrlKey()
-        ));
+        if (\array_key_exists('url_key', $data)) {
+            $post->setUrlKey((string) $data['url_key']);
+        }
 
         if (isset($data['status'])) {
             $post->setStatus((int) $data['status']);

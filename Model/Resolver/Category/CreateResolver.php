@@ -10,11 +10,9 @@ use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use MageOS\Blog\Api\CategoryRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\CategoryFactory;
 use MageOS\Blog\Model\Resolver\AdminAuthorization;
 use MageOS\Blog\Model\Resolver\Mapper\CategoryMapper;
-use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class CreateResolver implements ResolverInterface
 {
@@ -23,7 +21,6 @@ class CreateResolver implements ResolverInterface
         private readonly CategoryRepositoryInterface $categoryRepository,
         private readonly CategoryMapper $categoryMapper,
         private readonly AdminAuthorization $adminAuthorization,
-        private readonly UrlKeyResolver $urlKeyResolver,
     ) {
     }
 
@@ -48,6 +45,9 @@ class CreateResolver implements ResolverInterface
 
         $category = $this->categoryFactory->create();
 
+        if (\array_key_exists('url_key', $input)) {
+            $category->setUrlKey((string) $input['url_key']);
+        }
         if (\array_key_exists('title', $input)) {
             $category->setTitle((string) $input['title']);
         }
@@ -85,12 +85,6 @@ class CreateResolver implements ResolverInterface
         }
 
         try {
-            // url_key is optional in the schema; fall back to a slug generated from the title.
-            $category->setUrlKey($this->urlKeyResolver->resolve(
-                isset($input['url_key']) ? (string) $input['url_key'] : null,
-                isset($input['title']) ? (string) $input['title'] : null,
-                UrlKeyGeneratorInterface::ENTITY_CATEGORY
-            ));
             $saved = $this->categoryRepository->save($category);
         } catch (LocalizedException $e) {
             throw new GraphQlInputException(__($e->getMessage()), $e);

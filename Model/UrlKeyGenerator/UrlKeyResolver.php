@@ -8,11 +8,7 @@ use Magento\Framework\Exception\LocalizedException;
 use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 
 /**
- * Resolves the url_key (slug, for Author) to persist for an entity being saved.
- *
- * The four admin Save controllers and the eight GraphQL create/update resolvers all need the same
- * fallback chain. It lives here rather than being repeated because the entity setters are
- * non-nullable: handing them a blank value is a TypeError, not a validation error.
+ * Picks the url_key (slug, for Author) to persist for an entity being saved.
  */
 class UrlKeyResolver
 {
@@ -25,33 +21,35 @@ class UrlKeyResolver
     /**
      * Resolution order: submitted value, then the value already stored, then generated from title.
      *
-     * Keeping the stored value ahead of the title means blanking the field on an edit form leaves
-     * the current URL alone instead of silently moving the page.
+     * Stored ahead of title means blanking the field on an edit keeps the current URL. A submitted
+     * value that normalizes to nothing is rejected rather than quietly replaced.
      *
-     * @param string|null $submitted Raw submitted url_key/slug, or null when the field was absent.
-     * @param string|null $titleSource Post/Category/Tag title, or Author name.
-     * @param string $entityType One of UrlKeyGeneratorInterface::ENTITY_*.
-     * @param string $existing Currently stored url_key/slug; '' for a new entity.
-     * @throws LocalizedException when no usable value is available.
+     * @throws LocalizedException
      */
     public function resolve(
-        ?string $submitted,
-        ?string $titleSource,
-        string $entityType,
-        string $existing = '',
-        ?int $storeId = null,
+        SlugEntity $entity,
+        SlugCandidates $candidates,
+        ?int $storeId = null
     ): string {
-        $normalized = $this->normalizer->normalize((string) $submitted);
+        $submitted = trim((string) $candidates->submitted);
+        $normalized = $this->normalizer->normalize($submitted);
         if ($normalized !== '') {
             return $normalized;
         }
+        if ($submitted !== '') {
+            throw new LocalizedException(__(
+                'URL key "%1" is not valid. Use letters, numbers and hyphens, or leave it empty to '
+                . 'generate one automatically.',
+                $submitted
+            ));
+        }
 
-        $existing = trim($existing);
+        $existing = trim((string) $candidates->existing);
         if ($existing !== '') {
             return $existing;
         }
 
-        $title = trim((string) $titleSource);
+        $title = trim((string) $candidates->titleSource);
         if ($title === '') {
             throw new LocalizedException(
                 __('A URL key is required and could not be generated automatically.')
@@ -59,11 +57,10 @@ class UrlKeyResolver
         }
 
         try {
-            return $this->generator->generate($title, $entityType, $storeId);
-        } catch (\InvalidArgumentException $e) {
+            return $this->generator->generate($title, $entity->entityType(), $storeId);
+        } catch (\InvalidArgumentException) {
             throw new LocalizedException(
-                __('Could not build a URL key from "%1". Please enter one manually.', $title),
-                $e
+                __('Could not build a URL key from "%1". Please enter one manually.', $title)
             );
         }
     }

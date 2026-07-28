@@ -12,9 +12,7 @@ use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use MageOS\Blog\Api\TagRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\Tag;
-use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class InlineEdit extends Action implements HttpPostActionInterface
 {
@@ -22,8 +20,7 @@ class InlineEdit extends Action implements HttpPostActionInterface
 
     public function __construct(
         Context $context,
-        private readonly TagRepositoryInterface $repository,
-        private readonly UrlKeyResolver $urlKeyResolver
+        private readonly TagRepositoryInterface $repository
     ) {
         parent::__construct($context);
     }
@@ -55,24 +52,10 @@ class InlineEdit extends Action implements HttpPostActionInterface
         foreach ($items as $tagId => $changes) {
             try {
                 $tag = $this->repository->getById((int) $tagId);
-                $changes = (array) $changes;
                 if ($tag instanceof Tag) {
-                    foreach ($changes as $key => $value) {
-                        if ($key === 'url_key') {
-                            continue;
-                        }
+                    foreach ((array) $changes as $key => $value) {
                         $tag->setData((string) $key, $value);
                     }
-                }
-                // Blanking the url_key cell keeps the current slug rather than storing '', and
-                // an edited title never rewrites the slug behind the editor's back.
-                if (\array_key_exists('url_key', $changes)) {
-                    $tag->setUrlKey($this->urlKeyResolver->resolve(
-                        (string) $changes['url_key'],
-                        $tag->getTitle(),
-                        UrlKeyGeneratorInterface::ENTITY_TAG,
-                        $tag->getUrlKey()
-                    ));
                 }
                 $this->repository->save($tag);
             } catch (\Throwable $e) {

@@ -12,10 +12,8 @@ use Magento\Framework\GraphQl\Exception\GraphQlNoSuchEntityException;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use MageOS\Blog\Api\CategoryRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\Resolver\AdminAuthorization;
 use MageOS\Blog\Model\Resolver\Mapper\CategoryMapper;
-use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class UpdateResolver implements ResolverInterface
 {
@@ -23,7 +21,6 @@ class UpdateResolver implements ResolverInterface
         private readonly CategoryRepositoryInterface $categoryRepository,
         private readonly CategoryMapper $categoryMapper,
         private readonly AdminAuthorization $adminAuthorization,
-        private readonly UrlKeyResolver $urlKeyResolver,
     ) {
     }
 
@@ -55,6 +52,9 @@ class UpdateResolver implements ResolverInterface
             throw new GraphQlNoSuchEntityException(__($e->getMessage()), $e);
         }
 
+        if (\array_key_exists('url_key', $input)) {
+            $category->setUrlKey((string) $input['url_key']);
+        }
         if (\array_key_exists('title', $input)) {
             $category->setTitle((string) $input['title']);
         }
@@ -92,13 +92,6 @@ class UpdateResolver implements ResolverInterface
         }
 
         try {
-            // A blank or omitted url_key keeps the stored slug rather than moving the page.
-            $category->setUrlKey($this->urlKeyResolver->resolve(
-                isset($input['url_key']) ? (string) $input['url_key'] : null,
-                isset($input['title']) ? (string) $input['title'] : $category->getTitle(),
-                UrlKeyGeneratorInterface::ENTITY_CATEGORY,
-                $category->getUrlKey()
-            ));
             $saved = $this->categoryRepository->save($category);
         } catch (LocalizedException $e) {
             throw new GraphQlInputException(__($e->getMessage()), $e);

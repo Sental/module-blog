@@ -6,6 +6,8 @@ namespace MageOS\Blog\Test\Unit\Model\UrlKeyGenerator;
 
 use Magento\Framework\Exception\LocalizedException;
 use MageOS\Blog\Api\UrlKeyGeneratorInterface;
+use MageOS\Blog\Model\UrlKeyGenerator\SlugCandidates;
+use MageOS\Blog\Model\UrlKeyGenerator\SlugEntity;
 use MageOS\Blog\Model\UrlKeyGenerator\SlugNormalizer;
 use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -32,10 +34,12 @@ final class UrlKeyResolverTest extends TestCase
         self::assertSame(
             'chosen-slug',
             $this->resolver->resolve(
-                'chosen-slug',
-                'Some Title',
-                UrlKeyGeneratorInterface::ENTITY_POST,
-                'stored-slug'
+                SlugEntity::Post,
+                new SlugCandidates(
+                    submitted: 'chosen-slug',
+                    existing: 'stored-slug',
+                    titleSource: 'Some Title'
+                )
             )
         );
     }
@@ -46,7 +50,10 @@ final class UrlKeyResolverTest extends TestCase
     {
         self::assertSame(
             $expected,
-            $this->resolver->resolve($submitted, null, UrlKeyGeneratorInterface::ENTITY_POST, 'stored-slug')
+            $this->resolver->resolve(
+                SlugEntity::Post,
+                new SlugCandidates(submitted: $submitted, existing: 'stored-slug')
+            )
         );
     }
 
@@ -73,10 +80,12 @@ final class UrlKeyResolverTest extends TestCase
         self::assertSame(
             'stored-slug',
             $this->resolver->resolve(
-                $submitted,
-                'A Brand New Title',
-                UrlKeyGeneratorInterface::ENTITY_POST,
-                'stored-slug'
+                SlugEntity::Post,
+                new SlugCandidates(
+                    submitted: $submitted,
+                    existing: 'stored-slug',
+                    titleSource: 'A Brand New Title'
+                )
             )
         );
     }
@@ -90,8 +99,56 @@ final class UrlKeyResolverTest extends TestCase
             'field absent'          => [null],
             'field empty'           => [''],
             'field whitespace only' => ['   '],
-            'field unsluggable'     => ['!!!'],
         ];
+    }
+
+    /**
+     * Junk that normalizes away is a typo, not a request to auto-generate.
+     */
+    #[Test]
+    #[DataProvider('unsluggableSubmittedCases')]
+    public function rejects_submitted_input_that_cannot_become_a_slug(string $submitted): void
+    {
+        $this->generator->expects(self::never())->method('generate');
+
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessageMatches('/is not valid/');
+
+        $this->resolver->resolve(
+            SlugEntity::Post,
+            new SlugCandidates(
+                submitted: $submitted,
+                existing: 'stored-slug',
+                titleSource: 'Some Title'
+            )
+        );
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function unsluggableSubmittedCases(): array
+    {
+        return [
+            'punctuation only' => ['!!!'],
+            'question marks'   => ['???'],
+            'hyphens only'     => ['---'],
+            'emoji only'       => ['🚀🚀'],
+            'non-latin script' => ['Привет'],
+            'padded junk'      => ['   !!!   '],
+        ];
+    }
+
+    #[Test]
+    public function accepts_junk_that_still_contains_a_usable_character(): void
+    {
+        self::assertSame(
+            'a',
+            $this->resolver->resolve(
+                SlugEntity::Post,
+                new SlugCandidates(submitted: '!!!a!!!', existing: 'stored-slug')
+            )
+        );
     }
 
     #[Test]
@@ -99,26 +156,33 @@ final class UrlKeyResolverTest extends TestCase
     {
         $this->generator->expects(self::once())
             ->method('generate')
-            ->with('Hello World', UrlKeyGeneratorInterface::ENTITY_POST, null)
+            ->with('Hello World', 'post', null)
             ->willReturn('hello-world');
 
         self::assertSame(
             'hello-world',
-            $this->resolver->resolve('', 'Hello World', UrlKeyGeneratorInterface::ENTITY_POST)
+            $this->resolver->resolve(
+                SlugEntity::Post,
+                new SlugCandidates(submitted: '', titleSource: 'Hello World')
+            )
         );
     }
 
     #[Test]
-    public function passes_the_store_id_through_to_the_generator(): void
+    public function passes_the_entity_type_and_store_id_through_to_the_generator(): void
     {
         $this->generator->expects(self::once())
             ->method('generate')
-            ->with('Hello World', UrlKeyGeneratorInterface::ENTITY_CATEGORY, 3)
+            ->with('Hello World', 'category', 3)
             ->willReturn('hello-world');
 
         self::assertSame(
             'hello-world',
-            $this->resolver->resolve(null, 'Hello World', UrlKeyGeneratorInterface::ENTITY_CATEGORY, '', 3)
+            $this->resolver->resolve(
+                SlugEntity::Category,
+                new SlugCandidates(titleSource: 'Hello World'),
+                3
+            )
         );
     }
 
@@ -127,7 +191,10 @@ final class UrlKeyResolverTest extends TestCase
     {
         self::assertSame(
             'stored-slug',
-            $this->resolver->resolve(null, null, UrlKeyGeneratorInterface::ENTITY_POST, "  stored-slug\n")
+            $this->resolver->resolve(
+                SlugEntity::Post,
+                new SlugCandidates(existing: "  stored-slug\n")
+            )
         );
     }
 
@@ -138,7 +205,10 @@ final class UrlKeyResolverTest extends TestCase
             ->willThrowException(new \InvalidArgumentException("Cannot generate a URL key from 'category'."));
 
         $this->expectException(LocalizedException::class);
-        $this->resolver->resolve('', 'category', UrlKeyGeneratorInterface::ENTITY_POST);
+        $this->resolver->resolve(
+            SlugEntity::Post,
+            new SlugCandidates(submitted: '', titleSource: 'category')
+        );
     }
 
     #[Test]
@@ -147,7 +217,7 @@ final class UrlKeyResolverTest extends TestCase
         $this->generator->expects(self::never())->method('generate');
 
         $this->expectException(LocalizedException::class);
-        $this->resolver->resolve(null, null, UrlKeyGeneratorInterface::ENTITY_POST);
+        $this->resolver->resolve(SlugEntity::Post, new SlugCandidates());
     }
 
     #[Test]
@@ -156,6 +226,9 @@ final class UrlKeyResolverTest extends TestCase
         $this->generator->expects(self::never())->method('generate');
 
         $this->expectException(LocalizedException::class);
-        $this->resolver->resolve('', '   ', UrlKeyGeneratorInterface::ENTITY_POST);
+        $this->resolver->resolve(
+            SlugEntity::Post,
+            new SlugCandidates(submitted: '', titleSource: '   ')
+        );
     }
 }

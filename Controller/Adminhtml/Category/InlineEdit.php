@@ -12,9 +12,7 @@ use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use MageOS\Blog\Api\CategoryRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\Category;
-use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 
 class InlineEdit extends Action implements HttpPostActionInterface
 {
@@ -22,8 +20,7 @@ class InlineEdit extends Action implements HttpPostActionInterface
 
     public function __construct(
         Context $context,
-        private readonly CategoryRepositoryInterface $repository,
-        private readonly UrlKeyResolver $urlKeyResolver
+        private readonly CategoryRepositoryInterface $repository
     ) {
         parent::__construct($context);
     }
@@ -55,24 +52,10 @@ class InlineEdit extends Action implements HttpPostActionInterface
         foreach ($items as $categoryId => $changes) {
             try {
                 $category = $this->repository->getById((int) $categoryId);
-                $changes = (array) $changes;
                 if ($category instanceof Category) {
-                    foreach ($changes as $key => $value) {
-                        if ($key === 'url_key') {
-                            continue;
-                        }
+                    foreach ((array) $changes as $key => $value) {
                         $category->setData((string) $key, $value);
                     }
-                }
-                // Blanking the url_key cell keeps the current slug rather than storing '', and
-                // an edited title never rewrites the slug behind the editor's back.
-                if (\array_key_exists('url_key', $changes)) {
-                    $category->setUrlKey($this->urlKeyResolver->resolve(
-                        (string) $changes['url_key'],
-                        $category->getTitle(),
-                        UrlKeyGeneratorInterface::ENTITY_CATEGORY,
-                        $category->getUrlKey()
-                    ));
                 }
                 $this->repository->save($category);
             } catch (\Throwable $e) {

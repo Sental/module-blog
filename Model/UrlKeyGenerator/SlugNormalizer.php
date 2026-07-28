@@ -6,9 +6,6 @@ namespace MageOS\Blog\Model\UrlKeyGenerator;
 
 /**
  * Turns arbitrary text into a url_key-safe slug.
- *
- * Extracted from MageOS\Blog\Model\UrlKeyGenerator so that UrlKeyResolver can normalize a
- * hand-typed slug without also triggering generate()'s collision suffixing.
  */
 class SlugNormalizer
 {
