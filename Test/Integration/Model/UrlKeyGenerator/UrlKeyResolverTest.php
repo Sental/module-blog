@@ -8,7 +8,8 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\TestFramework\Helper\Bootstrap;
 use MageOS\Blog\Api\Data\PostInterfaceFactory;
 use MageOS\Blog\Api\PostRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
+use MageOS\Blog\Model\UrlKeyGenerator\SlugCandidates;
+use MageOS\Blog\Model\UrlKeyGenerator\SlugEntity;
 use MageOS\Blog\Model\UrlKeyGenerator\UrlKeyResolver;
 use PHPUnit\Framework\TestCase;
 
@@ -22,7 +23,10 @@ final class UrlKeyResolverTest extends TestCase
     {
         self::assertSame(
             'integration-fresh-title',
-            $this->resolver()->resolve('', 'Integration Fresh Title', UrlKeyGeneratorInterface::ENTITY_POST)
+            $this->resolver()->resolve(
+                SlugEntity::Post,
+                new SlugCandidates(titleSource: 'Integration Fresh Title')
+            )
         );
     }
 
@@ -32,7 +36,10 @@ final class UrlKeyResolverTest extends TestCase
 
         self::assertSame(
             'integration-taken-2',
-            $this->resolver()->resolve('', 'Integration Taken', UrlKeyGeneratorInterface::ENTITY_POST)
+            $this->resolver()->resolve(
+                SlugEntity::Post,
+                new SlugCandidates(titleSource: 'Integration Taken')
+            )
         );
     }
 
@@ -41,7 +48,10 @@ final class UrlKeyResolverTest extends TestCase
         // Never silently renamed: a clash must surface as a validation error instead.
         self::assertSame(
             'integration-typed',
-            $this->resolver()->resolve('Integration Typed!', 'Ignored Title', UrlKeyGeneratorInterface::ENTITY_POST)
+            $this->resolver()->resolve(
+                SlugEntity::Post,
+                new SlugCandidates(submitted: 'Integration Typed!', titleSource: 'Ignored Title')
+            )
         );
     }
 
@@ -50,10 +60,11 @@ final class UrlKeyResolverTest extends TestCase
         self::assertSame(
             'integration-stored',
             $this->resolver()->resolve(
-                '',
-                'A Completely Different Title',
-                UrlKeyGeneratorInterface::ENTITY_POST,
-                'integration-stored'
+                SlugEntity::Post,
+                new SlugCandidates(
+                    existing: 'integration-stored',
+                    titleSource: 'A Completely Different Title'
+                )
             )
         );
     }
@@ -61,13 +72,13 @@ final class UrlKeyResolverTest extends TestCase
     public function test_reserved_title_surfaces_as_a_localized_exception(): void
     {
         $this->expectException(LocalizedException::class);
-        $this->resolver()->resolve('', 'Category', UrlKeyGeneratorInterface::ENTITY_POST);
+        $this->resolver()->resolve(SlugEntity::Post, new SlugCandidates(titleSource: 'Category'));
     }
 
     public function test_no_slug_and_no_title_surfaces_as_a_localized_exception(): void
     {
         $this->expectException(LocalizedException::class);
-        $this->resolver()->resolve('', '', UrlKeyGeneratorInterface::ENTITY_POST);
+        $this->resolver()->resolve(SlugEntity::Post, new SlugCandidates());
     }
 
     private function createPost(string $title, string $urlKey): void
