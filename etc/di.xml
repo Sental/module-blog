@@ -137,6 +137,13 @@
                 type="MageOS\Blog\Plugin\Repository\Author\UrlRewritePlugin"
                 sortOrder="10"/>
     </type>
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="mageos_blog_url_rewrite_regenerate" xsi:type="object">MageOS\Blog\Console\Command\RegenerateUrlRewrites</item>
+            </argument>
+        </arguments>
+    </type>
     <type name="Magento\Framework\View\TemplateEngine\Php">
         <plugin name="mageos_blog_hyva_template_swap"
                 type="MageOS\Blog\Plugin\Magento\Framework\View\TemplateEngine\Php"

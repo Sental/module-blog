@@ -25,13 +25,8 @@ class UrlRewritePlugin
 
     public function afterSave(TagRepositoryInterface $subject, TagInterface $result): TagInterface
     {
-        $storeIds = $result->getStoreIds();
-        if ($storeIds === []) {
-            return $result;
-        }
-
         $tagId = (int) $result->getTagId();
-        $newRows = $this->urlRewriteBuilder->buildForTag($result, $storeIds);
+        $newRows = $this->urlRewriteBuilder->buildForTag($result, $result->getStoreIds());
         $newRequestPath = 'blog/tag/' . $result->getUrlKey();
         $newTargetPath = 'blog/tag/view/id/' . $tagId;
 

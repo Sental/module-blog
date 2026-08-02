@@ -96,7 +96,7 @@ class UrlRewriteBuilder
             $authorId,
             $requestPath,
             $targetPath,
-            $this->allActiveStoreIds(),
+            $this->allStoreIds(),
         );
     }
 
@@ -128,26 +128,30 @@ class UrlRewriteBuilder
     }
 
     /**
+     * An unassigned entity is treated like store 0: rewrites for every store, never a silent no-op.
+     *
      * @param int[] $storeIds
      * @return int[]
      */
     private function expandStoreIds(array $storeIds): array
     {
         $normalized = array_values(array_unique(array_map('intval', $storeIds)));
-        if (\in_array(0, $normalized, true)) {
-            return $this->allActiveStoreIds();
+        if ($normalized === [] || \in_array(0, $normalized, true)) {
+            return $this->allStoreIds();
         }
 
         return $normalized;
     }
 
     /**
+     * Store 0 is the pivot marker for "all store views", never a rewrite target of its own.
+     *
      * @return int[]
      */
-    private function allActiveStoreIds(): array
+    private function allStoreIds(): array
     {
         $ids = [];
-        foreach ($this->storeManager->getStores(true) as $store) {
+        foreach ($this->storeManager->getStores() as $store) {
             $ids[] = (int) $store->getId();
         }
 

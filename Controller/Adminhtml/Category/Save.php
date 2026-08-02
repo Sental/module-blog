@@ -115,13 +115,15 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        $category->setStoreIds($this->parseIdList($data['store_ids'] ?? []));
+        $category->setStoreIds($this->parseStoreIds($data['store_ids'] ?? []));
     }
 
     /**
+     * Store 0 is "All Store Views": it is a valid selection, not an empty one.
+     *
      * @return int[]
      */
-    private function parseIdList(mixed $raw): array
+    private function parseStoreIds(mixed $raw): array
     {
         if (\is_string($raw)) {
             $raw = $raw === '' ? [] : explode(',', $raw);
@@ -129,10 +131,12 @@ class Save extends Action implements HttpPostActionInterface
         if (!\is_array($raw)) {
             return [];
         }
-        return array_values(array_filter(
+        $ids = array_values(array_unique(array_filter(
             array_map('intval', $raw),
-            static fn (int $id): bool => $id > 0
-        ));
+            static fn (int $id): bool => $id >= 0
+        )));
+
+        return \in_array(0, $ids, true) ? [0] : $ids;
     }
 
     /**
