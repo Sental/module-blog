@@ -14,7 +14,6 @@ use MageOS\Blog\Api\AuthorRepositoryInterface;
 use MageOS\Blog\Api\Data\AuthorInterface;
 use MageOS\Blog\Api\Data\AuthorSearchResultsInterface;
 use MageOS\Blog\Api\Data\AuthorSearchResultsInterfaceFactory;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\ResourceModel\Author as AuthorResource;
 use MageOS\Blog\Model\ResourceModel\Author\CollectionFactory as AuthorCollectionFactory;
 
@@ -26,7 +25,6 @@ class AuthorRepository implements AuthorRepositoryInterface
         private readonly AuthorCollectionFactory $collectionFactory,
         private readonly AuthorSearchResultsInterfaceFactory $searchResultsFactory,
         private readonly CollectionProcessorInterface $collectionProcessor,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator,
     ) {
     }
 
@@ -37,18 +35,10 @@ class AuthorRepository implements AuthorRepositoryInterface
         }
 
         try {
-            $this->urlKeyGenerator->validate(
-                $author->getSlug(),
-                UrlKeyGeneratorInterface::ENTITY_AUTHOR,
-                null,
-                $author->getAuthorId() !== null ? (int) $author->getAuthorId() : null
-            );
-        } catch (\InvalidArgumentException $e) {
-            throw new LocalizedException(__($e->getMessage()), $e);
-        }
-
-        try {
             $this->resource->save($author);
+        } catch (LocalizedException $e) {
+            // Slug errors from _beforeSave: surface verbatim, not wrapped in a save error.
+            throw $e;
         } catch (\Exception $e) {
             throw new CouldNotSaveException(__('Could not save the blog author: %1', $e->getMessage()), $e);
         }

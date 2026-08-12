@@ -14,7 +14,6 @@ use MageOS\Blog\Api\Data\TagInterface;
 use MageOS\Blog\Api\Data\TagSearchResultsInterface;
 use MageOS\Blog\Api\Data\TagSearchResultsInterfaceFactory;
 use MageOS\Blog\Api\TagRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\ResourceModel\Tag as TagResource;
 use MageOS\Blog\Model\ResourceModel\Tag\CollectionFactory as TagCollectionFactory;
 use MageOS\Blog\Model\Tag\Link\StoreLinkManager;
@@ -28,7 +27,6 @@ class TagRepository implements TagRepositoryInterface
         private readonly TagSearchResultsInterfaceFactory $searchResultsFactory,
         private readonly CollectionProcessorInterface $collectionProcessor,
         private readonly StoreLinkManager $storeLinks,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator,
     ) {
     }
 
@@ -39,18 +37,10 @@ class TagRepository implements TagRepositoryInterface
         }
 
         try {
-            $this->urlKeyGenerator->validate(
-                (string) $tag->getUrlKey(),
-                UrlKeyGeneratorInterface::ENTITY_TAG,
-                null,
-                $tag->getTagId() !== null ? (int) $tag->getTagId() : null
-            );
-        } catch (\InvalidArgumentException $e) {
-            throw new LocalizedException(__($e->getMessage()), $e);
-        }
-
-        try {
             $this->resource->save($tag);
+        } catch (LocalizedException $e) {
+            // Slug errors from _beforeSave: surface verbatim, not wrapped in a save error.
+            throw $e;
         } catch (\Exception $e) {
             throw new CouldNotSaveException(__('Could not save the blog tag: %1', $e->getMessage()), $e);
         }

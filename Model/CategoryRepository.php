@@ -14,7 +14,6 @@ use MageOS\Blog\Api\CategoryRepositoryInterface;
 use MageOS\Blog\Api\Data\CategoryInterface;
 use MageOS\Blog\Api\Data\CategorySearchResultsInterface;
 use MageOS\Blog\Api\Data\CategorySearchResultsInterfaceFactory;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\Category\Link\StoreLinkManager;
 use MageOS\Blog\Model\ResourceModel\Category as CategoryResource;
 use MageOS\Blog\Model\ResourceModel\Category\CollectionFactory as CategoryCollectionFactory;
@@ -28,7 +27,6 @@ class CategoryRepository implements CategoryRepositoryInterface
         private readonly CategorySearchResultsInterfaceFactory $searchResultsFactory,
         private readonly CollectionProcessorInterface $collectionProcessor,
         private readonly StoreLinkManager $storeLinks,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator,
     ) {
     }
 
@@ -39,18 +37,10 @@ class CategoryRepository implements CategoryRepositoryInterface
         }
 
         try {
-            $this->urlKeyGenerator->validate(
-                (string) $category->getUrlKey(),
-                UrlKeyGeneratorInterface::ENTITY_CATEGORY,
-                null,
-                $category->getCategoryId() !== null ? (int) $category->getCategoryId() : null
-            );
-        } catch (\InvalidArgumentException $e) {
-            throw new LocalizedException(__($e->getMessage()), $e);
-        }
-
-        try {
             $this->resource->save($category);
+        } catch (LocalizedException $e) {
+            // Slug errors from _beforeSave: surface verbatim, not wrapped in a save error.
+            throw $e;
         } catch (\Exception $e) {
             throw new CouldNotSaveException(__('Could not save the blog category: %1', $e->getMessage()), $e);
         }

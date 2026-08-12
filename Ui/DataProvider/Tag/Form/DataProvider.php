@@ -7,6 +7,7 @@ namespace MageOS\Blog\Ui\DataProvider\Tag\Form;
 use Magento\Framework\App\RequestInterface;
 use Magento\Ui\DataProvider\AbstractDataProvider;
 use MageOS\Blog\Model\ResourceModel\Tag\CollectionFactory;
+use MageOS\Blog\Model\Tag\Link\StoreLinkManager;
 
 class DataProvider extends AbstractDataProvider
 {
@@ -25,6 +26,7 @@ class DataProvider extends AbstractDataProvider
         string $requestFieldName,
         CollectionFactory $collectionFactory,
         private readonly RequestInterface $request,
+        private readonly StoreLinkManager $storeLinks,
         array $meta = [],
         array $data = []
     ) {
@@ -50,7 +52,9 @@ class DataProvider extends AbstractDataProvider
 
         foreach ($this->collection->getItems() as $tag) {
             $id = (int) $tag->getId();
-            $this->loadedData[$id] = $tag->getData();
+            $data = $tag->getData();
+            $data['store_ids'] = array_map('strval', $this->storeLinks->getLinkedIds($id));
+            $this->loadedData[$id] = $data;
         }
 
         return $this->loadedData;

@@ -16,7 +16,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use MageOS\Blog\Api\Data\TagInterface;
 use MageOS\Blog\Api\Data\TagInterfaceFactory;
 use MageOS\Blog\Api\TagRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 
 class Save extends Action implements HttpPostActionInterface
 {
@@ -25,8 +24,7 @@ class Save extends Action implements HttpPostActionInterface
     public function __construct(
         Context $context,
         private readonly TagRepositoryInterface $repository,
-        private readonly TagInterfaceFactory $tagFactory,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator
+        private readonly TagInterfaceFactory $tagFactory
     ) {
         parent::__construct($context);
     }
@@ -78,8 +76,9 @@ class Save extends Action implements HttpPostActionInterface
      */
     private function hydrate(TagInterface $tag, array $data): void
     {
+        // url_key is absent on purpose: this loop maps '' to setUrlKey(null), a TypeError.
         $scalarFields = [
-            'title', 'url_key', 'description',
+            'title', 'description',
             'meta_title', 'meta_description',
         ];
         foreach ($scalarFields as $field) {
@@ -94,24 +93,23 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        if (isset($data['title']) && (!isset($data['url_key']) || $data['url_key'] === '')) {
-            $tag->setUrlKey($this->urlKeyGenerator->generate(
-                (string) $data['title'],
-                UrlKeyGeneratorInterface::ENTITY_TAG
-            ));
+        if (\array_key_exists('url_key', $data)) {
+            $tag->setUrlKey((string) $data['url_key']);
         }
 
         if (\array_key_exists('is_active', $data)) {
             $tag->setIsActive((bool) $data['is_active']);
         }
 
-        $tag->setStoreIds($this->parseIdList($data['store_ids'] ?? []));
+        $tag->setStoreIds($this->parseStoreIds($data['store_ids'] ?? []));
     }
 
     /**
+     * Store 0 is "All Store Views": it is a valid selection, not an empty one.
+     *
      * @return int[]
      */
-    private function parseIdList(mixed $raw): array
+    private function parseStoreIds(mixed $raw): array
     {
         if (\is_string($raw)) {
             $raw = $raw === '' ? [] : explode(',', $raw);
@@ -119,10 +117,12 @@ class Save extends Action implements HttpPostActionInterface
         if (!\is_array($raw)) {
             return [];
         }
-        return array_values(array_filter(
+        $ids = array_values(array_unique(array_filter(
             array_map('intval', $raw),
-            static fn (int $id): bool => $id > 0
-        ));
+            static fn (int $id): bool => $id >= 0
+        )));
+
+        return \in_array(0, $ids, true) ? [0] : $ids;
     }
 
     /**

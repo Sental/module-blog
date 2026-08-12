@@ -198,7 +198,7 @@
             <formElements>
                 <multiselect>
                     <settings>
-                        <options class="Magento\Store\Ui\Component\Listing\Column\Store\Options"/>
+                        <options class="MageOS\Blog\Ui\Component\Form\Stores\Options"/>
                     </settings>
                 </multiselect>
             </formElements>

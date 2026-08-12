@@ -16,7 +16,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use MageOS\Blog\Api\CategoryRepositoryInterface;
 use MageOS\Blog\Api\Data\CategoryInterface;
 use MageOS\Blog\Api\Data\CategoryInterfaceFactory;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 
 class Save extends Action implements HttpPostActionInterface
 {
@@ -25,8 +24,7 @@ class Save extends Action implements HttpPostActionInterface
     public function __construct(
         Context $context,
         private readonly CategoryRepositoryInterface $repository,
-        private readonly CategoryInterfaceFactory $categoryFactory,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator
+        private readonly CategoryInterfaceFactory $categoryFactory
     ) {
         parent::__construct($context);
     }
@@ -81,8 +79,9 @@ class Save extends Action implements HttpPostActionInterface
      */
     private function hydrate(CategoryInterface $category, array $data): void
     {
+        // url_key is absent on purpose: this loop maps '' to setUrlKey(null), a TypeError.
         $scalarFields = [
-            'title', 'url_key', 'description',
+            'title', 'description',
             'meta_title', 'meta_description', 'meta_keywords',
         ];
         foreach ($scalarFields as $field) {
@@ -97,11 +96,8 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        if (isset($data['title']) && (!isset($data['url_key']) || $data['url_key'] === '')) {
-            $category->setUrlKey($this->urlKeyGenerator->generate(
-                (string) $data['title'],
-                UrlKeyGeneratorInterface::ENTITY_CATEGORY
-            ));
+        if (\array_key_exists('url_key', $data)) {
+            $category->setUrlKey((string) $data['url_key']);
         }
 
         if (\array_key_exists('parent_id', $data)) {
@@ -119,13 +115,15 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        $category->setStoreIds($this->parseIdList($data['store_ids'] ?? []));
+        $category->setStoreIds($this->parseStoreIds($data['store_ids'] ?? []));
     }
 
     /**
+     * Store 0 is "All Store Views": it is a valid selection, not an empty one.
+     *
      * @return int[]
      */
-    private function parseIdList(mixed $raw): array
+    private function parseStoreIds(mixed $raw): array
     {
         if (\is_string($raw)) {
             $raw = $raw === '' ? [] : explode(',', $raw);
@@ -133,10 +131,12 @@ class Save extends Action implements HttpPostActionInterface
         if (!\is_array($raw)) {
             return [];
         }
-        return array_values(array_filter(
+        $ids = array_values(array_unique(array_filter(
             array_map('intval', $raw),
-            static fn (int $id): bool => $id > 0
-        ));
+            static fn (int $id): bool => $id >= 0
+        )));
+
+        return \in_array(0, $ids, true) ? [0] : $ids;
     }
 
     /**

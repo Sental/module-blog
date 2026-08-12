@@ -16,7 +16,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use MageOS\Blog\Api\Data\PostInterface;
 use MageOS\Blog\Api\Data\PostInterfaceFactory;
 use MageOS\Blog\Api\PostRepositoryInterface;
-use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\ImageUploader;
 
 class Save extends Action implements HttpPostActionInterface
@@ -27,7 +26,6 @@ class Save extends Action implements HttpPostActionInterface
         Context $context,
         private readonly PostRepositoryInterface $repository,
         private readonly PostInterfaceFactory $postFactory,
-        private readonly UrlKeyGeneratorInterface $urlKeyGenerator,
         private readonly ImageUploader $imageUploader
     ) {
         parent::__construct($context);
@@ -80,8 +78,9 @@ class Save extends Action implements HttpPostActionInterface
      */
     private function hydrate(PostInterface $post, array $data): void
     {
+        // url_key is absent on purpose: this loop maps '' to setUrlKey(null), a TypeError.
         $scalarFields = [
-            'title', 'url_key', 'content', 'short_content',
+            'title', 'content', 'short_content',
             'featured_image_alt', 'meta_title', 'meta_description',
             'meta_keywords', 'meta_robots', 'og_title', 'og_description',
             'og_type', 'publish_date',
@@ -98,11 +97,8 @@ class Save extends Action implements HttpPostActionInterface
             }
         }
 
-        if (isset($data['title']) && (!isset($data['url_key']) || $data['url_key'] === '')) {
-            $post->setUrlKey($this->urlKeyGenerator->generate(
-                (string) $data['title'],
-                UrlKeyGeneratorInterface::ENTITY_POST
-            ));
+        if (\array_key_exists('url_key', $data)) {
+            $post->setUrlKey((string) $data['url_key']);
         }
 
         if (isset($data['status'])) {
@@ -112,7 +108,7 @@ class Save extends Action implements HttpPostActionInterface
             $post->setAuthorId((int) $data['author_id']);
         }
 
-        $post->setStoreIds($this->parseIdList($data['store_ids'] ?? []));
+        $post->setStoreIds($this->parseStoreIds($data['store_ids'] ?? []));
         $post->setCategoryIds($this->parseIdList($data['category_ids'] ?? []));
         $post->setTagIds($this->parseIdList($data['tag_ids'] ?? []));
         $post->setRelatedPostIds($this->parseIdList($data['related_post_ids'] ?? []));
@@ -149,6 +145,27 @@ class Save extends Action implements HttpPostActionInterface
             array_map('intval', $raw),
             static fn (int $id): bool => $id > 0
         ));
+    }
+
+    /**
+     * Store 0 is "All Store Views" and must survive, unlike the entity IDs of parseIdList().
+     *
+     * @return int[]
+     */
+    private function parseStoreIds(mixed $raw): array
+    {
+        if (\is_string($raw)) {
+            $raw = $raw === '' ? [] : explode(',', $raw);
+        }
+        if (!\is_array($raw)) {
+            return [];
+        }
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $raw),
+            static fn (int $id): bool => $id >= 0
+        )));
+
+        return \in_array(0, $ids, true) ? [0] : $ids;
     }
 
     private function extractUploadedFileName(mixed $raw): ?string

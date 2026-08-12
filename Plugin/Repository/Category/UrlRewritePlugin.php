@@ -27,13 +27,8 @@ class UrlRewritePlugin
         CategoryRepositoryInterface $subject,
         CategoryInterface $result,
     ): CategoryInterface {
-        $storeIds = $result->getStoreIds();
-        if ($storeIds === []) {
-            return $result;
-        }
-
         $categoryId = (int) $result->getCategoryId();
-        $newRows = $this->urlRewriteBuilder->buildForCategory($result, $storeIds);
+        $newRows = $this->urlRewriteBuilder->buildForCategory($result, $result->getStoreIds());
         $newRequestPath = 'blog/category/' . $result->getUrlKey();
         $newTargetPath = 'blog/category/view/id/' . $categoryId;
 

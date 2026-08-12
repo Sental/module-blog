@@ -11,6 +11,7 @@
 "%1 result(s)","%1 result(s)"
 "%1 tag(s) disabled.","%1 tag(s) disabled."
 "%1 tag(s) enabled.","%1 tag(s) enabled."
+"A URL key is required and could not be generated automatically.","A URL key is required and could not be generated automatically."
 "A total of %1 record(s) were deleted.","A total of %1 record(s) were deleted."
 "Add New Author","Add New Author"
 "Add New Category","Add New Category"
@@ -57,6 +58,7 @@
 "Category List","Category List"
 "Category not found.","Category not found."
 "Category saved.","Category saved."
+"Could not build a URL key from ""%1"". Please enter one manually.","Could not build a URL key from ""%1"". Please enter one manually."
 "Could not delete author: %1","Could not delete author: %1"
 "Could not delete category: %1","Could not delete category: %1"
 "Could not delete post: %1","Could not delete post: %1"
@@ -182,6 +184,7 @@
 "Unsupported post entity: %1","Unsupported post entity: %1"
 "Unsupported tag entity: %1","Unsupported tag entity: %1"
 "URL Key","URL Key"
+"URL key ""%1"" is not valid. Use letters, numbers and hyphens, or leave it empty to generate one automatically.","URL key ""%1"" is not valid. Use letters, numbers and hyphens, or leave it empty to generate one automatically."
 "X (Twitter)","X (Twitter)"
 Active,Active
 Archive,Archive

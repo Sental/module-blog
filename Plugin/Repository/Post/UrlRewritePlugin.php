@@ -25,13 +25,8 @@ class UrlRewritePlugin
 
     public function afterSave(PostRepositoryInterface $subject, PostInterface $result): PostInterface
     {
-        $storeIds = $result->getStoreIds();
-        if ($storeIds === []) {
-            return $result;
-        }
-
         $postId = (int) $result->getPostId();
-        $newRows = $this->urlRewriteBuilder->buildForPost($result, $storeIds);
+        $newRows = $this->urlRewriteBuilder->buildForPost($result, $result->getStoreIds());
         $newRequestPath = 'blog/' . $result->getUrlKey();
         $newTargetPath = 'blog/post/view/id/' . $postId;
 

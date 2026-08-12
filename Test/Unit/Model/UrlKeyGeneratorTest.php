@@ -7,6 +7,7 @@ namespace MageOS\Blog\Test\Unit\Model;
 use MageOS\Blog\Api\UrlKeyGeneratorInterface;
 use MageOS\Blog\Model\UrlKeyGenerator;
 use MageOS\Blog\Model\UrlKeyGenerator\CollisionChecker;
+use MageOS\Blog\Model\UrlKeyGenerator\SlugNormalizer;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +21,7 @@ final class UrlKeyGeneratorTest extends TestCase
     {
         $this->checker = $this->createMock(CollisionChecker::class);
         $this->checker->method('isTaken')->willReturn(false);
-        $this->generator = new UrlKeyGenerator($this->checker);
+        $this->generator = new UrlKeyGenerator($this->checker, new SlugNormalizer());
     }
 
     #[Test]
@@ -60,7 +61,7 @@ final class UrlKeyGeneratorTest extends TestCase
         $checker->expects(self::exactly(3))
             ->method('isTaken')
             ->willReturnOnConsecutiveCalls(true, true, false);
-        $generator = new UrlKeyGenerator($checker);
+        $generator = new UrlKeyGenerator($checker, new SlugNormalizer());
 
         self::assertSame('hello-3', $generator->generate('hello', UrlKeyGeneratorInterface::ENTITY_POST));
     }
