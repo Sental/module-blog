@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MageOS\Blog\Test\Integration\Model;
 
+use Magento\Framework\App\ResourceConnection;
 use Magento\TestFramework\Helper\Bootstrap;
 use MageOS\Blog\Api\Data\PostInterface;
 use MageOS\Blog\Api\Data\PostInterfaceFactory;
@@ -33,9 +34,16 @@ final class RelatedPostsProviderStoreScopeTest extends TestCase
         self::assertSame([], $this->idsOf($related), 'A draft must not appear as a related post.');
     }
 
+    /**
+     * @magentoDataFixture Magento/Store/_files/store.php
+     */
     public function test_manual_relation_excludes_posts_from_another_store(): void
     {
-        $otherStoreOnly = $this->createPost('other-store-related', BlogPostStatus::Published, [2]);
+        $otherStoreOnly = $this->createPost(
+            'other-store-related',
+            BlogPostStatus::Published,
+            [$this->secondStoreId()]
+        );
         $subject = $this->createPost('subject-b', BlogPostStatus::Published, [0], [
             (int) $otherStoreOnly->getPostId(),
         ]);
@@ -64,11 +72,12 @@ final class RelatedPostsProviderStoreScopeTest extends TestCase
     /**
      * The algorithmic fallback filters on status but historically ignored store
      * scope, so it needs the same guarantee as the manual path.
+     *
+     * @magentoDataFixture Magento/Store/_files/store.php
      */
     public function test_algorithmic_fallback_excludes_posts_from_another_store(): void
     {
-        $connection = Bootstrap::getObjectManager()
-            ->get(\Magento\Framework\App\ResourceConnection::class);
+        $connection = Bootstrap::getObjectManager()->get(ResourceConnection::class);
         $categoryTable = $connection->getTableName('mageos_blog_category');
         $connection->getConnection()->insert($categoryTable, [
             'url_key' => 'shared-cat',
@@ -76,7 +85,11 @@ final class RelatedPostsProviderStoreScopeTest extends TestCase
         ]);
         $categoryId = (int) $connection->getConnection()->lastInsertId();
 
-        $otherStoreOnly = $this->createPost('algo-other-store', BlogPostStatus::Published, [2]);
+        $otherStoreOnly = $this->createPost(
+            'algo-other-store',
+            BlogPostStatus::Published,
+            [$this->secondStoreId()]
+        );
         $otherStoreOnly->setCategoryIds([$categoryId]);
         $this->repository()->save($otherStoreOnly);
 
@@ -135,5 +148,27 @@ final class RelatedPostsProviderStoreScopeTest extends TestCase
     private function repository(): PostRepositoryInterface
     {
         return Bootstrap::getObjectManager()->get(PostRepositoryInterface::class);
+    }
+
+    /**
+     * Resolved rather than hardcoded: mageos_blog_post_store carries a foreign key
+     * to store.store_id, so an invented id fails the insert instead of the assertion.
+     */
+    private function secondStoreId(): int
+    {
+        $resource = Bootstrap::getObjectManager()->get(ResourceConnection::class);
+        $connection = $resource->getConnection();
+
+        $id = $connection->fetchOne(
+            $connection->select()
+                ->from($resource->getTableName('store'), ['store_id'])
+                ->where('store_id > ?', 1)
+                ->order('store_id ASC')
+                ->limit(1)
+        );
+
+        self::assertNotFalse($id, 'The store fixture should have added a second store view.');
+
+        return (int) $id;
     }
 }
