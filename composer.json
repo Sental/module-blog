@@ -29,7 +29,9 @@
         "infection/infection": "^0.29"
     },
     "autoload": {
-        "files": ["registration.php"],
+        "files": [
+            "registration.php"
+        ],
         "psr-4": {
             "MageOS\\Blog\\": ""
         }
@@ -56,11 +58,16 @@
         }
     ],
     "scripts": {
-        "test:unit":      "phpunit -c phpunit.xml.dist --testsuite unit",
-        "test:phpstan":   "phpstan analyse --memory-limit=1G",
-        "test:cs-fixer":  "php-cs-fixer fix --dry-run --allow-risky=yes --diff",
-        "test:phpcs":     "phpcs --standard=phpcs.xml.dist",
+        "test:unit": "phpunit -c phpunit.xml.dist --testsuite unit",
+        "test:phpstan": "phpstan analyse --memory-limit=1G",
+        "test:cs-fixer": "php-cs-fixer fix --dry-run --allow-risky=yes --diff",
+        "test:phpcs": "phpcs --standard=phpcs.xml.dist",
         "test:infection": "infection --min-msi=75 --threads=4",
-        "test":           ["@test:unit", "@test:phpstan", "@test:cs-fixer", "@test:phpcs"]
+        "test": [
+            "@test:unit",
+            "@test:phpstan",
+            "@test:cs-fixer",
+            "@test:phpcs"
+        ]
     }
 }

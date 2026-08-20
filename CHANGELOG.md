@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/mage-os-lab/module-blog/compare/v1.1.0...v1.2.0) (2026-08-12)
+
+
+### Features
+
+* add url rewrite regenerate command ([7a2be85](https://github.com/mage-os-lab/module-blog/commit/7a2be85b76ec3f42aaa25b1a6afea94c244dee93))
+
+
+### Bug Fixes
+
+* Exception on NULL URL Key Value ([3db2f76](https://github.com/mage-os-lab/module-blog/commit/3db2f76d483a2d2c4408f68c9d60c27c5ab5f556))
+* resolve url_key instead of nulling it on save ([9850042](https://github.com/mage-os-lab/module-blog/commit/9850042e1d0510fe2427dda175a94746cad4975f))
+* TypeError on post, category, tag, author save with empty URL key ([3db2f76](https://github.com/mage-os-lab/module-blog/commit/3db2f76d483a2d2c4408f68c9d60c27c5ab5f556))
+* write url rewrites for posts, categories and tags ([4e144bd](https://github.com/mage-os-lab/module-blog/commit/4e144bdc9658c40593688288b99962a23dc93ddf))
+
 ## [1.1.0] - 2026-06-25
 
 Admin usability and storefront-design release. No schema or API breaking changes; safe upgrade from 1.0.0.
