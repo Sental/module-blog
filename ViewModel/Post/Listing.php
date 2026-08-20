@@ -6,7 +6,6 @@ namespace MageOS\Blog\ViewModel\Post;
 
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -16,17 +15,14 @@ use MageOS\Blog\Api\PostRepositoryInterface;
 use MageOS\Blog\Model\BlogPostStatus;
 use MageOS\Blog\Model\Config;
 
-class Listing implements ArgumentInterface
+class Listing implements ArgumentInterface, PostPresenterInterface
 {
+    use PostPresenterTrait;
+
     /**
      * @var array{items: PostInterface[], total: int}|null
      */
     private ?array $cachedResults = null;
-
-    /**
-     * @var array<int, \MageOS\Blog\Api\Data\AuthorInterface|false>
-     */
-    private array $authorCache = [];
 
     public function __construct(
         private readonly PostRepositoryInterface $repository,
@@ -82,69 +78,14 @@ class Listing implements ArgumentInterface
         return $this->urlBuilder->getUrl('blog', ['_query' => $current]);
     }
 
-    public function getPostUrl(PostInterface $post): string
+    private function urlBuilder(): UrlInterface
     {
-        return $this->urlBuilder->getUrl('blog/' . $post->getUrlKey());
+        return $this->urlBuilder;
     }
 
-    public function getFormattedPublishDate(PostInterface $post): string
+    private function authorRepository(): AuthorRepositoryInterface
     {
-        $date = $post->getPublishDate();
-        if ($date === null || $date === '') {
-            return '';
-        }
-
-        try {
-            return (new \DateTimeImmutable($date))->format('F j, Y');
-        } catch (\Throwable) {
-            return '';
-        }
-    }
-
-    public function getFeaturedImageUrl(PostInterface $post): ?string
-    {
-        $path = (string) $post->getFeaturedImage();
-        if ($path === '') {
-            return null;
-        }
-        $media = rtrim($this->urlBuilder->getBaseUrl(['_type' => UrlInterface::URL_TYPE_MEDIA]), '/');
-        return $media . '/mageos_blog/' . ltrim($path, '/');
-    }
-
-    public function getAuthorName(PostInterface $post): ?string
-    {
-        $author = $this->loadAuthor($post);
-        return $author === null ? null : (string) $author->getName();
-    }
-
-    public function getAuthorUrl(PostInterface $post): ?string
-    {
-        $author = $this->loadAuthor($post);
-        if ($author === null) {
-            return null;
-        }
-        $slug = (string) $author->getSlug();
-        return $slug === '' ? null : $this->urlBuilder->getUrl('blog/author/' . $slug);
-    }
-
-    private function loadAuthor(PostInterface $post): ?\MageOS\Blog\Api\Data\AuthorInterface
-    {
-        $id = $post->getAuthorId();
-        if ($id === null || $id <= 0) {
-            return null;
-        }
-        if (\array_key_exists($id, $this->authorCache)) {
-            $cached = $this->authorCache[$id];
-            return $cached === false ? null : $cached;
-        }
-        try {
-            $author = $this->authorRepository->getById((int) $id);
-        } catch (NoSuchEntityException) {
-            $this->authorCache[$id] = false;
-            return null;
-        }
-        $this->authorCache[$id] = $author;
-        return $author;
+        return $this->authorRepository;
     }
 
     /**

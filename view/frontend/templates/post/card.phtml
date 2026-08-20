@@ -6,9 +6,9 @@ declare(strict_types=1);
 /** @var \Magento\Framework\Escaper $escaper */
 
 use MageOS\Blog\Api\Data\PostInterface;
-use MageOS\Blog\ViewModel\Post\Listing as PostListing;
+use MageOS\Blog\ViewModel\Post\PostPresenterInterface;
 
-/** @var PostListing $viewModel */
+/** @var PostPresenterInterface $viewModel */
 $viewModel = $block->getData('view_model');
 /** @var PostInterface $post */
 $post = $block->getData('post');
