@@ -52,6 +52,16 @@
                 <enabled>1</enabled>
                 <limit>20</limit>
             </rss>
+            <related_posts>
+                <!--
+                    Deliberately off by default. The PDP block this gates shipped
+                    in 1.1.0 as an unimplemented placeholder on every product page
+                    (issue #20); opting in is the merchant's choice.
+                -->
+                <enabled>0</enabled>
+                <limit>3</limit>
+                <title>Related Posts</title>
+            </related_posts>
         </mageos_blog>
     </default>
 </config>

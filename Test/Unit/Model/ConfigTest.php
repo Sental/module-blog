@@ -150,4 +150,67 @@ final class ConfigTest extends TestCase
 
         self::assertSame(20, $config->getRssLimit());
     }
+
+    #[Test]
+    public function related_posts_enabled_reads_flag_via_scope_config(): void
+    {
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->expects(self::once())
+            ->method('isSetFlag')
+            ->with('mageos_blog/related_posts/enabled', ScopeInterface::SCOPE_STORE, 3)
+            ->willReturn(true);
+
+        $config = new Config($scopeConfig);
+
+        self::assertTrue($config->isRelatedPostsEnabled(3));
+    }
+
+    #[Test]
+    public function related_posts_disabled_when_flag_is_off(): void
+    {
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->method('isSetFlag')->willReturn(false);
+
+        $config = new Config($scopeConfig);
+
+        self::assertFalse($config->isRelatedPostsEnabled());
+    }
+
+    #[Test]
+    public function related_posts_limit_coerces_to_int(): void
+    {
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->expects(self::once())
+            ->method('getValue')
+            ->with('mageos_blog/related_posts/limit', ScopeInterface::SCOPE_STORE, null)
+            ->willReturn('3');
+
+        $config = new Config($scopeConfig);
+
+        self::assertSame(3, $config->getRelatedPostsLimit());
+    }
+
+    #[Test]
+    public function related_posts_limit_returns_zero_when_unset(): void
+    {
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->method('getValue')->willReturn(null);
+
+        $config = new Config($scopeConfig);
+
+        // The ViewModel treats <= 0 as "render nothing" rather than falling back
+        // to a default, so an unset value must not silently become a positive.
+        self::assertSame(0, $config->getRelatedPostsLimit());
+    }
+
+    #[Test]
+    public function related_posts_title_returns_empty_string_when_null(): void
+    {
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->method('getValue')->willReturn(null);
+
+        $config = new Config($scopeConfig);
+
+        self::assertSame('', $config->getRelatedPostsTitle());
+    }
 }
