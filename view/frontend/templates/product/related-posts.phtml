@@ -38,7 +38,8 @@ if ($posts === []) {
  * _prepareLayout). A second heading would repeat it immediately below itself.
  */
 ?>
-<div class="mageos-blog-related-posts">
+<?php /* `mageos-blog` carries the design tokens the card rules depend on. */ ?>
+<div class="mageos-blog mageos-blog-related-posts">
     <div class="mageos-blog-related-posts__grid">
         <?php /** @var PostInterface $post */ ?>
         <?php foreach ($posts as $post): ?>

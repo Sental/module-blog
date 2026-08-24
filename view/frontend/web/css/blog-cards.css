@@ -1,0 +1,143 @@
+/*
+ * MageOS Blog — post cards.
+ *
+ * Split out of blog.css so product pages can style the related-posts tab
+ * without pulling in the blog page layout, which is built for a 1-column
+ * template and fights a product page.
+ *
+ * This file owns the design tokens because it is the half that can be loaded
+ * on its own. blog.css consumes the same tokens and therefore REQUIRES this
+ * file to be loaded first — blog_default.xml loads them in that order.
+ */
+
+.mageos-blog {
+    --mageos-blog-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+    --mageos-blog-font-serif: Charter, "Iowan Old Style", Georgia, serif;
+    --mageos-blog-text: 1.125rem;
+    --mageos-blog-h1: clamp(2.25rem, 3.4vw + 1rem, 3.25rem);
+    --mageos-blog-h2: 1.75rem;
+    --mageos-blog-meta-size: 0.9375rem;
+
+    --mageos-blog-ink: #1a1a1a;
+    --mageos-blog-meta: #666;
+    --mageos-blog-border: rgba(0, 0, 0, 0.08);
+    --mageos-blog-chip-bg: rgba(0, 0, 0, 0.04);
+
+    color: var(--mageos-blog-ink);
+    font-family: var(--mageos-blog-font);
+    font-size: var(--mageos-blog-text);
+    line-height: 1.7;
+}
+
+.mageos-blog a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+.mageos-blog a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* ---------------- Post card ---------------- */
+
+.mageos-blog-card {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--mageos-blog-border);
+}
+
+.mageos-blog-card:last-child {
+    border-bottom: 0;
+}
+
+.mageos-blog-card__hero {
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.mageos-blog-card__hero img {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 0.375rem;
+    display: block;
+}
+
+.mageos-blog-card__title {
+    font-size: var(--mageos-blog-h2);
+    line-height: 1.25;
+    margin: 0 0 0.5rem;
+}
+
+.mageos-blog-card__title a {
+    text-decoration: none;
+}
+
+.mageos-blog-card__title a:hover {
+    text-decoration: underline;
+}
+
+.mageos-blog-card__meta,
+.mageos-blog-post__meta {
+    color: var(--mageos-blog-meta);
+    font-size: var(--mageos-blog-meta-size);
+    margin: 0 0 1rem;
+}
+
+.mageos-blog-card__excerpt {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0 0 1rem;
+}
+
+.mageos-blog-card__cta {
+    font-size: var(--mageos-blog-meta-size);
+    font-weight: 600;
+}
+
+/* ---------------- Related posts on a product page ---------------- */
+
+/*
+ * The card was designed for a 1-column blog page. Inside a product
+ * information tab it would otherwise stretch to the full tab width with
+ * blog-sized type. Constrain it: smaller headings, and a grid so several
+ * cards sit side by side instead of forming a long vertical scroll.
+ */
+.mageos-blog-related-posts {
+    --mageos-blog-text: 1rem;
+    --mageos-blog-h2: 1.25rem;
+
+    padding: 0.5rem 0 1rem;
+}
+
+.mageos-blog-related-posts__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/*
+ * The blog page uses a bottom rule to separate stacked cards. In a grid that
+ * rule lands mid-row and reads as a stray line, so drop it here.
+ */
+.mageos-blog-related-posts .mageos-blog-card {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+/* ---------------- Narrow viewports ---------------- */
+
+/*
+ * Lives here rather than in blog.css so the card stays self-contained: a
+ * product page loads only this file and must still get the responsive size.
+ */
+@media (max-width: 640px) {
+    .mageos-blog-card__title { font-size: 1.5rem; }
+}

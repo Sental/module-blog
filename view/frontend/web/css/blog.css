@@ -1,41 +1,14 @@
 /*
- * MageOS Blog — frontend stylesheet.
+ * MageOS Blog — blog page stylesheet.
  *
  * Scoped under `.mageos-blog`. Vanilla CSS (no Less), no JS, no Hyvä twin.
- * All custom properties declared on the root container so each card / post
- * can be overridden at the component level without global leakage.
+ *
+ * REQUIRES blog-cards.css, which owns the design tokens, the base `.mageos-blog`
+ * typography and the post-card component. The split lets product pages load the
+ * cards alone, without this file's page layout — which assumes the 1-column blog
+ * template and fights a product page. blog_default.xml loads blog-cards.css
+ * first; do not reintroduce the tokens here or the two copies will drift.
  */
-
-.mageos-blog {
-    --mageos-blog-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-        Roboto, Helvetica, Arial, sans-serif;
-    --mageos-blog-font-serif: Charter, "Iowan Old Style", Georgia, serif;
-    --mageos-blog-text: 1.125rem;
-    --mageos-blog-h1: clamp(2.25rem, 3.4vw + 1rem, 3.25rem);
-    --mageos-blog-h2: 1.75rem;
-    --mageos-blog-meta-size: 0.9375rem;
-
-    --mageos-blog-ink: #1a1a1a;
-    --mageos-blog-meta: #666;
-    --mageos-blog-border: rgba(0, 0, 0, 0.08);
-    --mageos-blog-chip-bg: rgba(0, 0, 0, 0.04);
-
-    color: var(--mageos-blog-ink);
-    font-family: var(--mageos-blog-font);
-    font-size: var(--mageos-blog-text);
-    line-height: 1.7;
-}
-
-.mageos-blog a {
-    color: inherit;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
-}
-
-.mageos-blog a:hover {
-    text-decoration-thickness: 2px;
-}
 
 .mageos-blog-container {
     max-width: 760px;
@@ -70,64 +43,12 @@
     margin-bottom: 1rem;
 }
 
-/* ---------------- Listing card ---------------- */
-
-.mageos-blog-card {
-    margin-bottom: 2rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid var(--mageos-blog-border);
-}
-
-.mageos-blog-card:last-child {
-    border-bottom: 0;
-}
-
-.mageos-blog-card__hero {
-    display: block;
-    margin-bottom: 1rem;
-}
-
-.mageos-blog-card__hero img {
-    aspect-ratio: 16 / 9;
-    width: 100%;
-    object-fit: cover;
-    border-radius: 0.375rem;
-    display: block;
-}
-
-.mageos-blog-card__title {
-    font-size: var(--mageos-blog-h2);
-    line-height: 1.25;
-    margin: 0 0 0.5rem;
-}
-
-.mageos-blog-card__title a {
-    text-decoration: none;
-}
-
-.mageos-blog-card__title a:hover {
-    text-decoration: underline;
-}
-
-.mageos-blog-card__meta,
-.mageos-blog-post__meta {
-    color: var(--mageos-blog-meta);
-    font-size: var(--mageos-blog-meta-size);
-    margin: 0 0 1rem;
-}
-
-.mageos-blog-card__excerpt {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    margin: 0 0 1rem;
-}
-
-.mageos-blog-card__cta {
-    font-size: var(--mageos-blog-meta-size);
-    font-weight: 600;
-}
+/*
+ * The `.mageos-blog-card` component lives in blog-cards.css, together with the
+ * design tokens, so it can be loaded on product pages on its own. That file
+ * also carries `.mageos-blog-post__meta`, which the post detail page below
+ * shares with the card.
+ */
 
 /* ---------------- Post detail ---------------- */
 
@@ -340,6 +261,5 @@
 
 @media (max-width: 640px) {
     .mageos-blog-container { padding-inline: 1rem; padding-block: 1.5rem; }
-    .mageos-blog-card__title { font-size: 1.5rem; }
     .mageos-blog-post__content { font-size: 1.0625rem; }
 }
