@@ -1,20 +1,6 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-    <head>
-        <!--
-            Only the card component, not blog.css: that file is blog-page
-            layout built for the 1-column template and has no business on a
-            product page.
-
-            NOT gated by ifconfig — <css> is a linkType in head.xsd, which
-            declares no ifconfig attribute. Adding one fails XSD validation and
-            Magento discards the ENTIRE layout file, silently taking the block
-            with it. One small stylesheet always loading is the lesser cost;
-            gate it with a Plugin on the head block if that ever matters.
-        -->
-        <css src="MageOS_Blog::css/blog-cards.css"/>
-    </head>
     <body>
         <!--
             referenceBlock, not referenceContainer: Magento_Catalog declares
