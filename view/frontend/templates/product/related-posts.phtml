@@ -2,16 +2,52 @@
 
 declare(strict_types=1);
 
-/** @var \Magento\Framework\View\Element\Template $block */
+use Magento\Framework\View\Element\Template;
+use MageOS\Blog\Api\Data\PostInterface;
+use MageOS\Blog\ViewModel\Product\RelatedPosts;
+
+/** @var \MageOS\Blog\Block\Product\RelatedPosts $block */
 /** @var \Magento\Framework\Escaper $escaper */
 
-$title = (string) $block->getData('title');
+/** @var RelatedPosts|null $viewModel */
+$viewModel = $block->getData('view_model');
+if (!$viewModel instanceof RelatedPosts) {
+    return;
+}
+
+$posts = $viewModel->getPosts();
+
+/*
+ * Emit NOTHING when there is nothing to show — not even a wrapper element.
+ * This block sits in the `detailed_info` group, and Luma's
+ * product/view/details.phtml decides whether to render a tab by trimming the
+ * child's output:
+ *
+ *     if (!$html || !trim($html)) { continue; }
+ *
+ * An empty <div> would be non-blank, defeat that check, and leave a tab header
+ * with an empty body on every product with no linked posts.
+ */
+if ($posts === []) {
+    return;
+}
+
+/*
+ * No heading here: this renders inside a product information tab, and the tab
+ * label already carries the title (the block feeds it from config in
+ * _prepareLayout). A second heading would repeat it immediately below itself.
+ */
 ?>
 <div class="mageos-blog-related-posts">
-    <?php if ($title !== ''): ?>
-        <h3 class="mageos-blog-related-posts__title"><?= $escaper->escapeHtml($title); ?></h3>
-    <?php endif; ?>
-    <p class="mageos-blog-related-posts__placeholder">
-        <?= $escaper->escapeHtml(__('Related posts for products — scoped ViewModel lands in v1.1.')); ?>
-    </p>
+    <div class="mageos-blog-related-posts__grid">
+        <?php /** @var PostInterface $post */ ?>
+        <?php foreach ($posts as $post): ?>
+            <?= /** @noEscape */ $block->getLayout()
+                ->createBlock(Template::class)
+                ->setTemplate('MageOS_Blog::post/card.phtml')
+                ->setData('view_model', $viewModel)
+                ->setData('post', $post)
+                ->toHtml(); ?>
+        <?php endforeach; ?>
+    </div>
 </div>

@@ -2,15 +2,50 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
-        <referenceContainer name="product.info.details">
-            <block class="Magento\Framework\View\Element\Template"
+        <!--
+            referenceBlock, not referenceContainer: Magento_Catalog declares
+            product.info.details as a BLOCK
+            (Magento\Catalog\Block\Product\View\Details), never a container.
+            Referencing it as a container matches nothing and is dropped
+            silently — the block simply never appears, with no error.
+        -->
+        <referenceBlock name="product.info.details">
+            <!--
+                Gated by mageos_blog/related_posts/enabled, which defaults to 0.
+                The 1.1.0 release shipped this block as an unimplemented
+                placeholder that rendered on every product page (issue #20), so
+                it is opt-in.
+
+                ifconfig covers the feature flag; the ViewModel additionally
+                checks mageos_blog/general/enabled, which layout XML cannot see.
+
+                group="detailed_info" is retained deliberately — the block has
+                rendered as a product information tab since 1.1.0, and anything
+                targeting or removing it by that grouping keeps working. The
+                template emits nothing at all when there are no posts, so Luma's
+                blank-output check drops the tab entirely rather than leaving an
+                empty one.
+            -->
+            <block class="MageOS\Blog\Block\Product\RelatedPosts"
                    name="mageos_blog.product.related_posts"
+                   as="mageos_blog_related_posts"
                    template="MageOS_Blog::product/related-posts.phtml"
-                   group="detailed_info">
+                   group="detailed_info"
+                   ifconfig="mageos_blog/related_posts/enabled">
                 <arguments>
+                    <argument name="view_model" xsi:type="object">MageOS\Blog\ViewModel\Product\RelatedPosts</argument>
+                    <!--
+                        details.phtml builds the tab label with
+                        $block->getChildData($alias, 'title'), so a tab needs
+                        both an `as` alias and a `title`. The block overwrites
+                        this from mageos_blog/related_posts/title at layout
+                        preparation; this value is the fallback when that
+                        config is empty.
+                    -->
                     <argument name="title" translate="true" xsi:type="string">Related Posts</argument>
+                    <argument name="sort_order" xsi:type="string">30</argument>
                 </arguments>
             </block>
-        </referenceContainer>
+        </referenceBlock>
     </body>
 </page>
