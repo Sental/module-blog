@@ -18,6 +18,7 @@ use MageOS\Blog\Model\Post\PostsByAssignmentProvider;
 use MageOS\Blog\ViewModel\Product\RelatedPosts;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 final class RelatedPostsTest extends TestCase
@@ -25,16 +26,20 @@ final class RelatedPostsTest extends TestCase
     private const STORE_ID = 1;
     private const PRODUCT_ID = 42;
 
-    private RequestInterface&MockObject $request;
+    // Stubs answer questions; mocks additionally assert interactions. Only the
+    // repository and the provider are asserted against (expects(never|once)),
+    // so the other two are stubs — which also keeps PHPUnit from flagging
+    // mocks that carry no expectations.
+    private RequestInterface&Stub $request;
     private ProductRepositoryInterface&MockObject $productRepository;
-    private Config&MockObject $config;
+    private Config&Stub $config;
     private PostsByAssignmentProvider&MockObject $provider;
 
     protected function setUp(): void
     {
-        $this->request = $this->createMock(RequestInterface::class);
+        $this->request = $this->createStub(RequestInterface::class);
         $this->productRepository = $this->createMock(ProductRepositoryInterface::class);
-        $this->config = $this->createMock(Config::class);
+        $this->config = $this->createStub(Config::class);
         $this->provider = $this->createMock(PostsByAssignmentProvider::class);
     }
 
@@ -88,6 +93,9 @@ final class RelatedPostsTest extends TestCase
         $this->withProduct();
         $this->config->method('isEnabled')->willReturn(false);
         $this->config->method('isRelatedPostsEnabled')->willReturn(true);
+        // A positive limit is essential: without it the limit guard returns []
+        // on its own and this test passes without ever exercising the flag.
+        $this->config->method('getRelatedPostsLimit')->willReturn(3);
         $this->provider->expects(self::never())->method('byProduct');
 
         self::assertSame([], $this->viewModel()->getPosts());
@@ -99,6 +107,7 @@ final class RelatedPostsTest extends TestCase
         $this->withProduct();
         $this->config->method('isEnabled')->willReturn(true);
         $this->config->method('isRelatedPostsEnabled')->willReturn(false);
+        $this->config->method('getRelatedPostsLimit')->willReturn(3);
         $this->provider->expects(self::never())->method('byProduct');
 
         self::assertSame([], $this->viewModel()->getPosts());
@@ -197,7 +206,8 @@ final class RelatedPostsTest extends TestCase
 
     private function makeProduct(): ProductInterface
     {
-        $product = $this->createMock(ProductInterface::class);
+        // Stub, not mock: nothing here asserts how the product is used.
+        $product = $this->createStub(ProductInterface::class);
         $product->method('getId')->willReturn(self::PRODUCT_ID);
 
         return $product;
@@ -205,7 +215,7 @@ final class RelatedPostsTest extends TestCase
 
     private function makePost(int $id): PostInterface
     {
-        $post = $this->createMock(PostInterface::class);
+        $post = $this->createStub(PostInterface::class);
         $post->method('getPostId')->willReturn($id);
 
         return $post;
@@ -213,17 +223,20 @@ final class RelatedPostsTest extends TestCase
 
     private function viewModel(): RelatedPosts
     {
-        $store = $this->createMock(StoreInterface::class);
+        // Stubs: these collaborators only need to answer, never to be asserted
+        // against. Mocks here would trip PHPUnit's "no expectations configured"
+        // notice for every test.
+        $store = $this->createStub(StoreInterface::class);
         $store->method('getId')->willReturn(self::STORE_ID);
-        $storeManager = $this->createMock(StoreManagerInterface::class);
+        $storeManager = $this->createStub(StoreManagerInterface::class);
         $storeManager->method('getStore')->willReturn($store);
 
         return new RelatedPosts(
             $this->request,
             $this->productRepository,
             $storeManager,
-            $this->createMock(UrlInterface::class),
-            $this->createMock(AuthorRepositoryInterface::class),
+            $this->createStub(UrlInterface::class),
+            $this->createStub(AuthorRepositoryInterface::class),
             $this->config,
             $this->provider
         );
