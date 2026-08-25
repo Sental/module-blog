@@ -6,25 +6,20 @@ namespace MageOS\Blog\ViewModel\Post;
 
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\DataObject;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Registry;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use MageOS\Blog\Api\AuthorRepositoryInterface;
-use MageOS\Blog\Api\Data\AuthorInterface;
 use MageOS\Blog\Api\Data\PostInterface;
 use MageOS\Blog\Api\RelatedPostsProviderInterface;
 use MageOS\Blog\Api\TagRepositoryInterface;
 use MageOS\Blog\Controller\Post\View as PostViewController;
 use MageOS\Blog\Model\Config;
 
-class Detail implements ArgumentInterface
+class Detail implements ArgumentInterface, PostPresenterInterface
 {
-    /**
-     * @var array<int, AuthorInterface|false>
-     */
-    private array $authorCache = [];
+    use PostPresenterTrait;
 
     public function __construct(
         private readonly Registry $registry,
@@ -62,18 +57,14 @@ class Detail implements ArgumentInterface
         return $this->getPost()?->getShortContent();
     }
 
-    public function getFeaturedImageUrl(?PostInterface $post = null): ?string
+    private function urlBuilder(): UrlInterface
     {
-        $post ??= $this->getPost();
-        if ($post === null) {
-            return null;
-        }
-        $path = (string) $post->getFeaturedImage();
-        if ($path === '') {
-            return null;
-        }
+        return $this->urlBuilder;
+    }
 
-        return $this->mediaUrl() . 'mageos_blog/' . $path;
+    private function authorRepository(): AuthorRepositoryInterface
+    {
+        return $this->authorRepository;
     }
 
     public function getFeaturedImageAlt(?PostInterface $post = null): string
@@ -81,47 +72,6 @@ class Detail implements ArgumentInterface
         $post ??= $this->getPost();
 
         return $post === null ? '' : (string) ($post->getFeaturedImageAlt() ?? $post->getTitle());
-    }
-
-    public function getFormattedPublishDate(?PostInterface $post = null): string
-    {
-        $post ??= $this->getPost();
-        if ($post === null) {
-            return '';
-        }
-        $date = $post->getPublishDate();
-        if ($date === null || $date === '') {
-            return '';
-        }
-
-        try {
-            return (new \DateTimeImmutable($date))->format('F j, Y');
-        } catch (\Throwable) {
-            return '';
-        }
-    }
-
-    public function getPostUrl(PostInterface $post): string
-    {
-        return $this->urlBuilder->getUrl('blog/' . $post->getUrlKey());
-    }
-
-    public function getAuthorName(PostInterface $post): ?string
-    {
-        $author = $this->loadAuthor($post);
-
-        return $author === null ? null : (string) $author->getName();
-    }
-
-    public function getAuthorUrl(PostInterface $post): ?string
-    {
-        $author = $this->loadAuthor($post);
-        if ($author === null) {
-            return null;
-        }
-        $slug = (string) $author->getSlug();
-
-        return $slug === '' ? null : $this->urlBuilder->getUrl('blog/author/' . $slug);
     }
 
     /**
@@ -164,29 +114,6 @@ class Detail implements ArgumentInterface
         }
 
         return $this->relatedPostsProvider->forPost($post, $limit);
-    }
-
-    private function loadAuthor(PostInterface $post): ?AuthorInterface
-    {
-        $id = $post->getAuthorId();
-        if ($id === null || $id <= 0) {
-            return null;
-        }
-        if (\array_key_exists($id, $this->authorCache)) {
-            $cached = $this->authorCache[$id];
-
-            return $cached === false ? null : $cached;
-        }
-        try {
-            $author = $this->authorRepository->getById((int) $id);
-        } catch (NoSuchEntityException) {
-            $this->authorCache[$id] = false;
-
-            return null;
-        }
-        $this->authorCache[$id] = $author;
-
-        return $author;
     }
 
     public function getCanonicalUrl(): string
@@ -308,7 +235,7 @@ class Detail implements ArgumentInterface
             $data['dateModified'] = $updated;
         }
 
-        $img = $this->getOgImageUrl() ?? $this->getFeaturedImageUrl();
+        $img = $this->getOgImageUrl() ?? $this->getFeaturedImageUrl($post);
         if ($img !== null) {
             $data['image'] = $img;
         }
@@ -333,7 +260,7 @@ class Detail implements ArgumentInterface
             return $this->mediaUrl() . 'mageos_blog/' . $post->getOgImage();
         }
 
-        return $this->getFeaturedImageUrl();
+        return $this->getFeaturedImageUrl($post);
     }
 
     private function resolveOg(PostInterface $post, string $field): string
@@ -372,11 +299,6 @@ class Detail implements ArgumentInterface
         }
 
         return null;
-    }
-
-    private function mediaUrl(): string
-    {
-        return $this->urlBuilder->getBaseUrl(['_type' => UrlInterface::URL_TYPE_MEDIA]);
     }
 
     private function formatIso(?string $datetime): string

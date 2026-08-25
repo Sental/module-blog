@@ -19,10 +19,15 @@ class AlgorithmicLoader
     }
 
     /**
+     * Posts sharing the most categories / tags with the subject.
+     *
+     * `$storeId` precedes `$excludedIds` because it is always supplied; PHP
+     * deprecates a required parameter following an optional one.
+     *
      * @param int[] $excludedIds
      * @return PostInterface[]
      */
-    public function load(PostInterface $post, int $limit, array $excludedIds = []): array
+    public function load(PostInterface $post, int $limit, int $storeId, array $excludedIds = []): array
     {
         if ($limit <= 0) {
             return [];
@@ -79,7 +84,14 @@ class AlgorithmicLoader
                 'p.post_id = r.post_id AND p.status = ' . BlogPostStatus::Published->value,
                 []
             )
+            ->joinLeft(
+                ['s' => $this->resource->getTableName('mageos_blog_post_store')],
+                's.post_id = p.post_id',
+                []
+            )
             ->where('r.post_id NOT IN (?)', $excludedIds)
+            ->where('s.store_id IN (?) OR s.store_id IS NULL', [$storeId, 0])
+            ->group(['r.post_id', 'r.overlap', 'p.publish_date'])
             ->order('r.overlap DESC')
             ->order('p.publish_date DESC')
             ->limit($limit);

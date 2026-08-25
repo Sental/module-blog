@@ -8,15 +8,27 @@ use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Api\SortOrder;
 use Magento\Framework\Api\SortOrderBuilder;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\DataObject\IdentityInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Widget\Block\BlockInterface;
 use MageOS\Blog\Api\Data\PostInterface;
 use MageOS\Blog\Api\PostRepositoryInterface;
+use MageOS\Blog\Block\BlogCacheIdentities;
 use MageOS\Blog\Model\BlogPostStatus;
 
-class PostList extends Template implements BlockInterface
+class PostList extends Template implements BlockInterface, IdentityInterface
 {
+    use BlogCacheIdentities;
+
     protected $_template = 'MageOS_Blog::widget/post-list.phtml';
+
+    /**
+     * @return string[]
+     */
+    public function getIdentities(): array
+    {
+        return $this->postIdentities($this->getPosts());
+    }
 
     /**
      * @param array<string, mixed> $data

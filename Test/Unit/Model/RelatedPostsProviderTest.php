@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MageOS\Blog\Test\Unit\Model;
 
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use MageOS\Blog\Api\Data\PostInterface;
 use MageOS\Blog\Model\RelatedPostsProvider;
 use MageOS\Blog\Model\RelatedPostsProvider\AlgorithmicLoader;
@@ -13,6 +15,8 @@ use PHPUnit\Framework\TestCase;
 
 final class RelatedPostsProviderTest extends TestCase
 {
+    private const STORE_ID = 7;
+
     private ManualRelationLoader $manual;
     private AlgorithmicLoader $algorithmic;
     private RelatedPostsProvider $provider;
@@ -21,7 +25,13 @@ final class RelatedPostsProviderTest extends TestCase
     {
         $this->manual = $this->createMock(ManualRelationLoader::class);
         $this->algorithmic = $this->createMock(AlgorithmicLoader::class);
-        $this->provider = new RelatedPostsProvider($this->manual, $this->algorithmic);
+
+        $store = $this->createMock(StoreInterface::class);
+        $store->method('getId')->willReturn(self::STORE_ID);
+        $storeManager = $this->createMock(StoreManagerInterface::class);
+        $storeManager->method('getStore')->willReturn($store);
+
+        $this->provider = new RelatedPostsProvider($this->manual, $this->algorithmic, $storeManager);
     }
 
     #[Test]
@@ -57,12 +67,24 @@ final class RelatedPostsProviderTest extends TestCase
             ->with(
                 self::anything(),
                 2,
+                self::equalTo(self::STORE_ID),
                 self::equalTo([1, 2])
             )
             ->willReturn($algorithmicResults);
 
         $result = $this->provider->forPost($this->makePost(1), 3);
         self::assertCount(3, $result);
+    }
+
+    #[Test]
+    public function passes_the_current_store_to_the_manual_loader(): void
+    {
+        $this->manual->expects(self::once())
+            ->method('load')
+            ->with(self::anything(), 3, self::equalTo(self::STORE_ID))
+            ->willReturn([$this->makePost(2), $this->makePost(3), $this->makePost(4)]);
+
+        $this->provider->forPost($this->makePost(1), 3);
     }
 
     private function makePost(int $id): PostInterface

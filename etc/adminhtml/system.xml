@@ -150,6 +150,28 @@
                 </field>
             </group>
 
+            <group id="related_posts" translate="label" sortOrder="65" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Related Posts on Product Pages</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Shows posts linked to a product, in the product page's information tabs. Posts are linked from the post form's Related Products field.</comment>
+                </field>
+                <field id="limit" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Maximum Posts</label>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="title" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Section Title</label>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
             <group id="rss" translate="label" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>RSS</label>
                 <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">

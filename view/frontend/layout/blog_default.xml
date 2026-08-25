@@ -2,7 +2,14 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       layout="1column"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-    <head>
+    <!--<head>-->
+        <!--
+            Order matters: blog-cards.css declares the design tokens and the
+            base .mageos-blog typography that blog.css consumes.
+            For luma themes the styles are included by the _module.less system.
+        -->
+    <!--
+        <css src="MageOS_Blog::css/blog-cards.css"/>
         <css src="MageOS_Blog::css/blog.css"/>
-    </head>
+    </head>-->
 </page>

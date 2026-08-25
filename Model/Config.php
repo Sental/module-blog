@@ -45,6 +45,10 @@ class Config
     public const XML_PATH_RSS_ENABLED = 'mageos_blog/rss/enabled';
     public const XML_PATH_RSS_LIMIT = 'mageos_blog/rss/limit';
 
+    public const XML_PATH_RELATED_POSTS_ENABLED = 'mageos_blog/related_posts/enabled';
+    public const XML_PATH_RELATED_POSTS_LIMIT = 'mageos_blog/related_posts/limit';
+    public const XML_PATH_RELATED_POSTS_TITLE = 'mageos_blog/related_posts/title';
+
     public function __construct(private readonly ScopeConfigInterface $scopeConfig)
     {
     }
@@ -160,5 +164,40 @@ class Config
     public function getRssLimit(?int $storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(self::XML_PATH_RSS_LIMIT, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * Whether the related-posts section renders on product detail pages.
+     *
+     * Defaults to 0. The block this gates was shipped in 1.1.0 as an
+     * unimplemented placeholder that rendered on every product page (issue #20),
+     * so it stays opt-in: upgrading merchants get the placeholder removed and
+     * nothing new appearing until they choose it.
+     */
+    public function isRelatedPostsEnabled(?int $storeId = null): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            self::XML_PATH_RELATED_POSTS_ENABLED,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    public function getRelatedPostsLimit(?int $storeId = null): int
+    {
+        return (int) $this->scopeConfig->getValue(
+            self::XML_PATH_RELATED_POSTS_LIMIT,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    public function getRelatedPostsTitle(?int $storeId = null): string
+    {
+        return (string) $this->scopeConfig->getValue(
+            self::XML_PATH_RELATED_POSTS_TITLE,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
     }
 }

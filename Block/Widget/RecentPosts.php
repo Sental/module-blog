@@ -7,14 +7,29 @@ namespace MageOS\Blog\Block\Widget;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Api\SortOrder;
 use Magento\Framework\Api\SortOrderBuilder;
+use Magento\Framework\DataObject\IdentityInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Widget\Block\BlockInterface;
 use MageOS\Blog\Api\Data\PostInterface;
 use MageOS\Blog\Api\PostRepositoryInterface;
+use MageOS\Blog\Block\BlogCacheIdentities;
 use MageOS\Blog\Model\BlogPostStatus;
 
-class RecentPosts extends Template implements BlockInterface
+class RecentPosts extends Template implements BlockInterface, IdentityInterface
 {
+    use BlogCacheIdentities;
+
+    /**
+     * Posts rendered by this widget, wherever it is embedded — a CMS page, a
+     * block, a layout handle. Publishing a post must drop those pages too.
+     *
+     * @return string[]
+     */
+    public function getIdentities(): array
+    {
+        return $this->postIdentities($this->getPosts());
+    }
+
     protected $_template = 'MageOS_Blog::widget/recent-posts.phtml';
 
     /**

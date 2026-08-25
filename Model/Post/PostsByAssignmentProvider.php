@@ -52,6 +52,27 @@ class PostsByAssignmentProvider
     }
 
     /**
+     * Published posts linked to a catalog product, newest first.
+     *
+     * The pivot's `position` column is deliberately ignored here. It orders the
+     * *products within a post*, which is an unrelated merchant intent — reusing
+     * it to order posts within a product would surface that arbitrary sequence
+     * on the storefront. Recency is the meaningful order for a product page.
+     *
+     * @return PostInterface[]
+     */
+    public function byProduct(int $productId, int $storeId, int $limit = 3): array
+    {
+        return $this->load(
+            'mageos_blog_post_related_product',
+            'product_id',
+            $productId,
+            $storeId,
+            $limit,
+        );
+    }
+
+    /**
      * @return PostInterface[]
      */
     public function byAuthor(int $authorId, int $storeId, int $limit = 50): array
