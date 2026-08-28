@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1](https://github.com/mage-os-lab/module-blog/compare/v1.3.0...v1.3.1) (2026-08-28)
+
+
+### Miscellaneous Chores
+
+* **actions:** Update ci to use the latest versions ([28fe7f2](https://github.com/mage-os-lab/module-blog/commit/28fe7f26fd4d1458ef31bd679dceec7d2b798026))
+* **ci:** Update Check Extension CI to the test versions ([04179ec](https://github.com/mage-os-lab/module-blog/commit/04179ec87cb6dd7adc26e3d1aed6907539511fec))
+
 ## [1.3.0](https://github.com/mage-os-lab/module-blog/compare/v1.2.0...v1.3.0) (2026-08-25)
 
 
