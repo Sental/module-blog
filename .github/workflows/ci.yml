@@ -20,7 +20,7 @@ jobs:
       - run: echo ${{ steps.supported-version.outputs.matrix }}
   check-extension:
     needs: compute_matrix
-    uses: graycoreio/github-actions-magento2/.github/workflows/check-extension.yaml@v8.7.0 # x-release-please-version
+    uses: graycoreio/github-actions-magento2/.github/workflows/check-extension.yaml@v8.10.0 # x-release-please-version
     with:
       matrix: ${{ needs.compute_matrix.outputs.matrix }}
     secrets:
@@ -32,7 +32,7 @@ jobs:
     name: PHPStan
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with: { php-version: '8.3' }
       - run: composer install --no-interaction --prefer-dist
@@ -43,7 +43,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with: { php-version: '8.3', coverage: pcov }
       - run: composer install --no-interaction --prefer-dist
