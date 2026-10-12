@@ -1,5 +1,6 @@
 includes:
     - vendor/bitexpert/phpstan-magento/extension.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
 parameters:
     level: 8
     paths:
@@ -12,3 +13,5 @@ parameters:
         - Ui
         - ViewModel
     treatPhpDocTypesAsCertain: false
+    parallel:
+        maximumNumberOfProcesses: 1
