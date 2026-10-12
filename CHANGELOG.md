@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1](https://github.com/mage-os-lab/module-blog/compare/v1.4.0...v1.4.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* add store filter to category & tag routes ([0e37aad](https://github.com/mage-os-lab/module-blog/commit/0e37aad5108c4b183a8cfbb54893956d426b6020))
+* coding standard errors ([4e10888](https://github.com/mage-os-lab/module-blog/commit/4e10888a898ccc2cfbe1bcb74cf06217789cab3d))
+
 ## [1.4.0](https://github.com/mage-os-lab/module-blog/compare/v1.3.2...v1.4.0) (2026-10-12)
 
 
