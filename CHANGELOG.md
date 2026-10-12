@@ -4,10 +4,18 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.0](https://github.com/mage-os-lab/module-blog/compare/v1.3.2...v1.4.0) (2026-10-12)
 
-* Updated the Post Content, Post Short Content, Category Description, Tag Description & the Author Bio to be rendered through the page filter.
-* **actions:** Update ci to use the latest versions
+
+### Features
+
+* Filter all page builder & tinymce content ([011a8c2](https://github.com/mage-os-lab/module-blog/commit/011a8c2ae8bb3deedd18de12f23b5e118db100b7))
+
+
+### Bug Fixes
+
+* coding standard errors ([9a0920f](https://github.com/mage-os-lab/module-blog/commit/9a0920f429259f817c15f13dd5e9ab181438b073))
+* magento coding standard errors ([e3804a1](https://github.com/mage-os-lab/module-blog/commit/e3804a16ddcab579e59becb52d456c24f7034aaf))
 
 ## [1.3.2](https://github.com/mage-os-lab/module-blog/compare/v1.3.1...v1.3.2) (2026-09-18)
 
