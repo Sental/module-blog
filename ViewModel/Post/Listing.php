@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace MageOS\Blog\ViewModel\Post;
 
 use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Framework\Api\SortOrder;
+use Magento\Framework\Api\SortOrderBuilder;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
@@ -31,7 +33,8 @@ class Listing implements ArgumentInterface, PostPresenterInterface
         private readonly RequestInterface $request,
         private readonly UrlInterface $urlBuilder,
         private readonly Config $config,
-        private readonly AuthorRepositoryInterface $authorRepository
+        private readonly AuthorRepositoryInterface $authorRepository,
+        private readonly SortOrderBuilder $sortOrderBuilder,
     ) {
     }
 
@@ -97,9 +100,16 @@ class Listing implements ArgumentInterface, PostPresenterInterface
             return $this->cachedResults;
         }
 
-        $this->storeManager->getStore()->getId();
+        $storeId = $this->storeManager->getStore()->getId();
+        $sortOrder = $this->sortOrderBuilder
+            ->setField(PostInterface::PUBLISH_DATE)
+            ->setDirection(SortOrder::SORT_DESC)
+            ->create();
+
         $criteria = $this->criteriaBuilder
             ->addFilter(PostInterface::STATUS, BlogPostStatus::Published->value)
+            ->addFilter(PostInterface::STORE_IDS, [$storeId, 0], 'in')
+            ->addSortOrder($sortOrder)
             ->setPageSize($this->getPageSize())
             ->setCurrentPage($this->getCurrentPage())
             ->create();

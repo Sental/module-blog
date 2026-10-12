@@ -12,6 +12,7 @@ use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Registry;
 use Magento\Framework\View\Result\Page;
+use Magento\Store\Model\StoreManagerInterface;
 use MageOS\Blog\Api\PostRepositoryInterface;
 use MageOS\Blog\Model\BlogPostStatus;
 use MageOS\Blog\Model\Config;
@@ -25,7 +26,8 @@ class View implements HttpGetActionInterface
         private readonly RequestInterface $request,
         private readonly Config $config,
         private readonly PostRepositoryInterface $repository,
-        private readonly Registry $registry
+        private readonly Registry $registry,
+        private readonly StoreManagerInterface $storeManager,
     ) {
     }
 
@@ -47,6 +49,13 @@ class View implements HttpGetActionInterface
         }
 
         if ($post->getStatus() !== BlogPostStatus::Published->value) {
+            return $this->notFound();
+        }
+
+        $storeId = $this->storeManager->getStore()->getId();
+        if (!(in_array(0, $post->getStoreIds()) ||
+            in_array($storeId, $post->getStoreIds()))
+        ) {
             return $this->notFound();
         }
 
