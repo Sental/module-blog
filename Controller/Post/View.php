@@ -53,8 +53,7 @@ class View implements HttpGetActionInterface
         }
 
         $storeId = $this->storeManager->getStore()->getId();
-        if (
-            !(in_array(0, $post->getStoreIds()) ||
+        if (!(in_array(0, $post->getStoreIds()) ||
             in_array($storeId, $post->getStoreIds()))
         ) {
             return $this->notFound();
