@@ -14,8 +14,7 @@ class PostContentPlugin
     public function __construct(
         private readonly FilterProvider $filterProvider,
         private readonly LoggerInterface $logger,
-    )
-    {
+    ) {
     }
 
     /**
@@ -36,7 +35,7 @@ class PostContentPlugin
         
         try {
             return $pageFilter->filter($content);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $this->logger->warning($e);
             return $content;
         }

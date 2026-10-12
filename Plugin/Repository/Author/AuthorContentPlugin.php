@@ -14,8 +14,7 @@ class AuthorContentPlugin
     public function __construct(
         private readonly FilterProvider $filterProvider,
         private readonly LoggerInterface $logger,
-    )
-    {
+    ) {
     }
 
     /**
