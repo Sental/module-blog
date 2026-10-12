@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="MageOS\Blog\Api\Data\PostInterface">
+        <plugin name="mageos_blog_post_filter_post_content"
+                type="MageOS\Blog\Plugin\Repository\Post\PostContentPlugin"
+                sortOrder="10"/>
+    </type>
+
+    <type name="MageOS\Blog\Api\Data\CategoryInterface">
+        <plugin name="mageos_blog_category_filter_category_content"
+                type="MageOS\Blog\Plugin\Repository\Category\CategoryContentPlugin"
+                sortOrder="10"/>
+    </type>
+
+    <type name="MageOS\Blog\Api\Data\TagInterface">
+        <plugin name="mageos_blog_tag_filter_tag_content"
+                type="MageOS\Blog\Plugin\Repository\Tag\TagContentPlugin"
+                sortOrder="10"/>
+    </type>
+
+    <type name="MageOS\Blog\Api\Data\AuthorInterface">
+        <plugin name="mageos_blog_author_filter_author_content"
+                type="MageOS\Blog\Plugin\Repository\Author\AuthorContentPlugin"
+                sortOrder="10"/>
+    </type>
+</config>
