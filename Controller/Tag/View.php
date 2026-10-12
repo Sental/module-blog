@@ -12,6 +12,7 @@ use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Registry;
 use Magento\Framework\View\Result\Page;
+use Magento\Store\Model\StoreManagerInterface;
 use MageOS\Blog\Api\TagRepositoryInterface;
 use MageOS\Blog\Model\Config;
 
@@ -24,7 +25,8 @@ class View implements HttpGetActionInterface
         private readonly RequestInterface $request,
         private readonly Config $config,
         private readonly TagRepositoryInterface $repository,
-        private readonly Registry $registry
+        private readonly Registry $registry,
+        private readonly StoreManagerInterface $storeManager,
     ) {
     }
 
@@ -46,6 +48,13 @@ class View implements HttpGetActionInterface
         }
 
         if (!$tag->getIsActive()) {
+            return $this->notFound();
+        }
+
+        $storeId = $this->storeManager->getStore()->getId();
+        if (!(in_array(0, $tag->getStoreIds()) ||
+            in_array($storeId, $tag->getStoreIds()))
+        ) {
             return $this->notFound();
         }
 
