@@ -35,7 +35,7 @@ class CategoryContentPlugin
         
         try {
             return $pageFilter->filter($description);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $this->logger->warning($e);
             return $description;
         }

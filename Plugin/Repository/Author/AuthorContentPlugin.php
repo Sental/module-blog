@@ -34,7 +34,7 @@ class AuthorContentPlugin
         $pageFilter = $this->filterProvider->getPageFilter();
         try {
             return $pageFilter->filter($bio);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $this->logger->warning($e);
             return $bio;
         }

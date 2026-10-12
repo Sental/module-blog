@@ -59,7 +59,7 @@ class PostContentPlugin
         
         try {
             return $pageFilter->filter($content);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $this->logger->warning($e);
             return $content;
         }
