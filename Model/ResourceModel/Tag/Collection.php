@@ -50,8 +50,8 @@ class Collection extends AbstractCollection
      *
      * @see self::_getConditionSql for $condition
      *
-     * @param string|array $field
-     * @param null|string|array $condition
+     * @param string|array<int, string> $field
+     * @param null|string|array<string, string> $condition
      *
      * @return $this
      */
