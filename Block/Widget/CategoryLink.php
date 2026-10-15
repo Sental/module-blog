@@ -40,7 +40,10 @@ class CategoryLink extends Template implements BlockInterface
 
     public function getCategoryUrl(CategoryInterface $category): string
     {
-        return $this->_urlBuilder->getUrl('blog/category/' . $category->getUrlKey());
+        return $this->_urlBuilder->getUrl(
+            '',
+            ['_direct' => 'blog/category/' . $category->getUrlKey()]
+        );
     }
 
     public function getLabel(CategoryInterface $category): string

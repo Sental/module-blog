@@ -55,7 +55,10 @@ class BlogFeed implements DataProviderInterface
         foreach ($this->repository->getList($criteria)->getItems() as $post) {
             $entries[] = [
                 'title' => (string) $post->getTitle(),
-                'link' => $this->urlBuilder->getUrl('blog/' . $post->getUrlKey()),
+                'link' => $this->urlBuilder->getUrl(
+                    '',
+                    ['_direct' => 'blog/' . $post->getUrlKey()]
+                ),
                 'description' => (string) ($post->getShortContent() ?? ''),
                 'pubDate' => $this->formatRfc2822((string) ($post->getPublishDate() ?? '')),
             ];
@@ -64,7 +67,10 @@ class BlogFeed implements DataProviderInterface
         return [
             'title' => (string) $store->getName() . ' — ' . (string) __('Blog'),
             'description' => (string) __('Latest blog posts from %1', $store->getName()),
-            'link' => $this->urlBuilder->getUrl('blog/'),
+            'link' => $this->urlBuilder->getUrl(
+                '',
+                ['_direct' => 'blog/']
+            ),
             'entries' => $entries,
         ];
     }

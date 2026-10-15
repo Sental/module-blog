@@ -96,7 +96,10 @@ class Detail implements ArgumentInterface, PostPresenterInterface
         foreach ($tags as $tag) {
             $out[] = [
                 'title' => (string) $tag->getTitle(),
-                'url' => $this->urlBuilder->getUrl('blog/tag/' . $tag->getUrlKey()),
+                'url' => $this->urlBuilder->getUrl(
+                    '',
+                    ['_direct' => 'blog/tag/' . $tag->getUrlKey()]
+                ),
             ];
         }
 
@@ -122,7 +125,10 @@ class Detail implements ArgumentInterface, PostPresenterInterface
 
         return $post === null
             ? ''
-            : (string) $this->urlBuilder->getUrl('blog/' . $post->getUrlKey());
+            : (string) $this->urlBuilder->getUrl(
+                '',
+                ['_direct' => 'blog/' . $post->getUrlKey()]
+            );
     }
 
     /**

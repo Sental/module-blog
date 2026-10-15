@@ -40,7 +40,10 @@ class TagLink extends Template implements BlockInterface
 
     public function getTagUrl(TagInterface $tag): string
     {
-        return $this->_urlBuilder->getUrl('blog/tag/' . $tag->getUrlKey());
+        return $this->_urlBuilder->getUrl(
+            '',
+            ['_direct' => 'blog/tag/' . $tag->getUrlKey()]
+        );
     }
 
     public function getLabel(TagInterface $tag): string
