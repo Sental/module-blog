@@ -82,7 +82,10 @@ class Results implements ArgumentInterface
 
     public function getPostUrl(PostInterface $post): string
     {
-        return $this->urlBuilder->getUrl('blog/' . $post->getUrlKey());
+        return $this->urlBuilder->getUrl(
+            '',
+            ['_direct' => 'blog/' . $post->getUrlKey()]
+        );
     }
 
     public function getPageUrl(int $page): string
@@ -128,7 +131,10 @@ class Results implements ArgumentInterface
             return null;
         }
         $slug = (string) $author->getSlug();
-        return $slug === '' ? null : $this->urlBuilder->getUrl('blog/author/' . $slug);
+        return $slug === '' ? null : $this->urlBuilder->getUrl(
+            '',
+            ['_direct' => 'blog/author/' . $slug]
+        );
     }
 
     private function loadAuthor(PostInterface $post): ?AuthorInterface

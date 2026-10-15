@@ -92,7 +92,10 @@ class Detail implements ArgumentInterface
 
         return $author === null
             ? ''
-            : $this->urlBuilder->getUrl('blog/author/' . $author->getSlug());
+            : $this->urlBuilder->getUrl(
+                '',
+                ['_direct' => 'blog/author/' . $author->getSlug()]
+            );
     }
 
     /**
@@ -121,7 +124,10 @@ class Detail implements ArgumentInterface
 
     public function getPostUrl(PostInterface $post): string
     {
-        return $this->urlBuilder->getUrl('blog/' . $post->getUrlKey());
+        return $this->urlBuilder->getUrl(
+            '',
+            ['_direct' => 'blog/' . $post->getUrlKey()]
+        );
     }
 
     public function getFormattedPublishDate(PostInterface $post): string
@@ -160,7 +166,10 @@ class Detail implements ArgumentInterface
             return null;
         }
         $slug = (string) $author->getSlug();
-        return $slug === '' ? null : $this->urlBuilder->getUrl('blog/author/' . $slug);
+        return $slug === '' ? null : $this->urlBuilder->getUrl(
+            '',
+            ['_direct' => 'blog/author/' . $slug]
+        );
     }
 
     private function loadAuthor(PostInterface $post): ?AuthorInterface

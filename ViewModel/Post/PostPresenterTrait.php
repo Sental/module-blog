@@ -30,7 +30,10 @@ trait PostPresenterTrait
 
     public function getPostUrl(PostInterface $post): string
     {
-        return $this->urlBuilder()->getUrl('blog/' . $post->getUrlKey());
+        return $this->urlBuilder()->getUrl(
+            '',
+            ['_direct' => 'blog/' . $post->getUrlKey()]
+        );
     }
 
     public function getFeaturedImageUrl(PostInterface $post): ?string
@@ -72,7 +75,10 @@ trait PostPresenterTrait
         }
         $slug = (string) $author->getSlug();
 
-        return $slug === '' ? null : $this->urlBuilder()->getUrl('blog/author/' . $slug);
+        return $slug === '' ? null : $this->urlBuilder()->getUrl(
+            '',
+            ['_direct' => 'blog/author/' . $slug]
+        );
     }
 
     private function mediaUrl(): string

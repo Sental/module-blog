@@ -40,7 +40,10 @@ class PostLink extends Template implements BlockInterface
 
     public function getPostUrl(PostInterface $post): string
     {
-        return $this->_urlBuilder->getUrl('blog/' . $post->getUrlKey());
+        return $this->_urlBuilder->getUrl(
+            '',
+            ['_direct' => 'blog/' . $post->getUrlKey()]
+        );
     }
 
     public function getLabel(PostInterface $post): string
