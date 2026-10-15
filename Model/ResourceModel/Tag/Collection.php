@@ -46,7 +46,14 @@ class Collection extends AbstractCollection
     }
 
     /**
-     * @inheritdoc
+     * Add field filter to collection
+     *
+     * @see self::_getConditionSql for $condition
+     *
+     * @param string|array $field
+     * @param null|string|array $condition
+     *
+     * @return $this
      */
     public function addFieldToFilter($field, $condition = null)
     {
