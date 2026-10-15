@@ -168,7 +168,7 @@ final class DetailTest extends TestCase
         $this->storeManager->method('getStore')->willReturn($store);
 
         $this->urlBuilder->method('getUrl')
-            ->with('blog/hello-world')
+            ->with('', ['_direct' => 'blog/hello-world'])
             ->willReturn('https://shop.test/blog/hello-world');
 
         $detail = $this->makeViewModel();
