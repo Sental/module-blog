@@ -43,7 +43,5 @@ class Collection extends AbstractCollection
                 CategoryInterface::STORE_IDS => 'ms.store_ids',
             ]
         );
-
-        return $this;
     }
 }

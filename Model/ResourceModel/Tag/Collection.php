@@ -43,10 +43,11 @@ class Collection extends AbstractCollection
                 TagInterface::STORE_IDS => 'ms.store_ids',
             ]
         );
-
-        return $this;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function addFieldToFilter($field, $condition = null)
     {
         if (is_string($field) && $field === 'tag_id') {
