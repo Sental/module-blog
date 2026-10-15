@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MageOS\Blog\Ui\DataProvider\Author\Form;
 
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Filesystem\Io\File as IoFile;
 use Magento\Framework\UrlInterface;
 use Magento\Ui\DataProvider\AbstractDataProvider;
 use MageOS\Blog\Model\ImageUploader;
@@ -29,6 +30,7 @@ class DataProvider extends AbstractDataProvider
         private readonly RequestInterface $request,
         private readonly ImageUploader $imageUploader,
         private readonly UrlInterface $urlBuilder,
+        private readonly IoFile $ioFile,
         array $meta = [],
         array $data = []
     ) {
@@ -71,10 +73,15 @@ class DataProvider extends AbstractDataProvider
         if (empty($data['avatar']) || !\is_string($data['avatar'])) {
             return $data;
         }
+        $storedLogoPath = $this->imageUploader->getBasePath() . '/' . $data['avatar'];
+        $pathInfo = $this->ioFile->getPathInfo($storedLogoPath);
         $data['avatar'] = [[
             'name' => $data['avatar'],
             'url' => $this->urlBuilder->getBaseUrl(['_type' => UrlInterface::URL_TYPE_MEDIA])
                 . $this->imageUploader->getBasePath() . '/' . $data['avatar'],
+            'type' => 'image/' . strtolower($pathInfo['extension'] ?? ''),
+            'size'        => 0,
+            'previewType' => 'image',
         ]];
         return $data;
     }
